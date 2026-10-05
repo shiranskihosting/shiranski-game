@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141210">
+<meta property="og:title" content="המטבח של שירנסקי מארח">
+<meta property="og:description" content="חמישה משחקים קצרים על טעמים, על אירוח ועל אליס. אוספים כוכבים ומקבלים תואר.">
+<meta property="og:type" content="website">
+<title>המטבח של שירנסקי מארח</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Playpen+Sans+Hebrew:wght@500;700&display=swap">
+<style>
+/* Layout: one-screen phone app; lobby of 5 games, each a full-screen stage with a top bar. Candle-lit dinner table: charcoal ground, cream type, olive accent, gold for wins. */
+:root{
+  --bg:#141210; --card:#1F1C19; --card2:#28241F; --line:#3A352E;
+  --fg:#F4EEE3; --muted:#B8AE9E; --olive:#A9AC86; --olive-deep:#7E8160;
+  --gold:#C9A96E; --gold-soft:rgba(201,169,110,.18); --ok:#9DBB7A; --bad:#C97A6E;
+  --display:"Playpen Sans Hebrew","Assistant",system-ui,sans-serif;
+  --body:"Assistant",system-ui,"Segoe UI",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.45;direction:rtl}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+.app{min-height:100%;max-width:520px;margin:0 auto;padding-block:16px 28px;padding-inline:18px;display:flex;flex-direction:column;gap:18px}
+.screen[hidden]{display:none!important}
+
+/* top bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}
+.bar .back{color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;padding:6px 2px}
+.bar .back svg{width:16px;height:16px;transform:scaleX(-1)}
+.stars{display:flex;align-items:center;gap:6px;color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}
+.stars svg{width:18px;height:18px;fill:var(--gold)}
+
+/* lobby */
+.brand{display:flex;flex-direction:column;gap:6px;padding-block:8px 4px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--olive);text-transform:uppercase;font-weight:600}
+h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:40ch}
+.games{display:grid;gap:12px}
+.game{display:flex;grid-template-columns:52px minmax(0,1fr) auto;direction:rtl;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:right;transition:transform .15s,border-color .15s}
+.game:active{transform:scale(.985)}
+.game:hover{border-color:var(--olive-deep)}
+.game .ico{order:0;width:52px;height:52px;border-radius:12px;background:var(--card2);display:grid;place-items:center}
+.game .ico svg{width:28px;height:28px;stroke:var(--olive);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.game>span:nth-child(2){order:1;min-width:0}
+.game h3{margin:0;font-size:18px;font-weight:700}
+.game p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.game .meta{order:2;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:13px;color:var(--muted);white-space:nowrap}
+.game .done{color:var(--gold);font-weight:700}
+.finish{margin-top:auto;display:grid;gap:10px}
+.note{font-size:13px;color:var(--muted);text-align:center;margin:0}
+
+/* generic stage */
+.stage{display:flex;flex-direction:column;gap:16px;flex:1}
+.prompt{font-family:var(--display);font-size:22px;line-height:1.25;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0}
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--olive);width:0;transition:width .35s}
+.choices{display:grid;gap:10px}
+.choice{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:right;font-size:17px;font-weight:600;transition:border-color .15s,background .15s,transform .15s}
+.choice:hover{border-color:var(--olive-deep)}
+.choice:active{transform:scale(.985)}
+.choice.ok{border-color:var(--ok);background:rgba(157,187,122,.12)}
+.choice.bad{border-color:var(--bad);background:rgba(201,122,110,.12)}
+.choice[disabled]{cursor:default;opacity:.85}
+.reveal{width:100%;background:var(--gold-soft);border:1px solid rgba(201,169,110,.35);border-radius:12px;padding:14px 16px;display:grid;gap:6px}
+.reveal b{color:var(--gold);font-family:var(--display);font-weight:700}
+.reveal p{margin:0}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;border-radius:12px;padding:14px 18px;font-weight:700;font-size:17px;text-decoration:none;transition:transform .15s,filter .15s}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--olive);color:#1A1912}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border:1px solid var(--line);color:var(--fg)}
+.btn.gold{background:var(--gold);color:#1A1912}
+.pair{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.ing{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;font-size:18px}
+.plus{color:var(--gold);font-size:22px;font-weight:700}
+.ing.q{border-style:dashed;color:var(--gold);border-color:var(--gold)}
+
+/* memory */
+.memgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mem{aspect-ratio:1;perspective:800px;background:none;display:block;width:100%;-webkit-tap-highlight-color:transparent}
+.mem .in{display:block;position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.mem.flip .in{transform:rotateY(180deg)}
+.mem .f,.mem .b{position:absolute;inset:0;border-radius:12px;display:grid;place-items:center;padding:6px;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-weight:700;font-size:13.5px;line-height:1.2}
+.mem .f{background:var(--card);border:1px solid var(--line)}
+.mem .f svg{width:30px;height:30px;stroke:var(--olive-deep);fill:none;stroke-width:1.5}
+.mem .b{background:var(--card2);border:1px solid var(--olive-deep);transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.mem.won .b{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+
+/* match photo to name */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ph{aspect-ratio:1;border-radius:12px;overflow:hidden;border:3px solid transparent;background:var(--card);transition:border-color .15s,transform .15s,opacity .3s;padding:0}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph.sel{border-color:var(--gold);transform:scale(.96)}
+.ph.done{border-color:var(--ok);opacity:.45;cursor:default}
+.ph.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.choice.done{opacity:.4;cursor:default;border-color:var(--ok)}
+/* zoom guess */
+.zoom{width:100%;aspect-ratio:1;max-width:100%;border-radius:14px;overflow:hidden;background:var(--card);position:relative}
+.zoom img{width:100%;height:100%;object-fit:cover;transform-origin:var(--ox,50%) var(--oy,50%);transform:scale(var(--z,4));transition:transform .5s}
+.zoom .ph{position:absolute;inset:0}
+
+/* result */
+.result{display:grid;gap:14px;text-align:center;padding-block:10px}
+.result h2{font-family:var(--display);font-size:28px;margin:0;text-wrap:balance;color:var(--gold)}
+.score{font-size:48px;font-weight:700;color:var(--gold);font-family:var(--display);line-height:1}
+.scoreline{color:var(--muted);margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tag{background:var(--card2);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--muted)}
+.tag.on{color:var(--gold);border:1px solid rgba(201,169,110,.4)}
+.actions{display:grid;gap:10px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--gold);color:#1A1912;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+
+/* glow on correct */
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(201,169,110,.6)}100%{box-shadow:0 0 0 24px rgba(201,169,110,0)}}
+.glow{animation:glow .7s ease-out}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- LOBBY -->
+  <section class="screen" id="lobby">
+    <header class="brand">
+      <span class="eyebrow">ערב בשירנסקי מארח</span>
+      <h1>המטבח של שירנסקי מארח</h1>
+      <p class="lede">חמישה משחקים קצרים על טעמים, על אירוח, ועל אליס. אוספים כוכבים, ובסוף מקבלים תואר.</p>
+    </header>
+    <div class="games" id="gamelist"></div>
+    <div class="finish">
+      <button class="btn gold" id="finishBtn">לתוצאה ולשיתוף</button>
+      <p class="note">אפשר לשחק בכל סדר. כוכבים נשמרים בטלפון הזה.</p>
+    </div>
+  </section>
+
+  <!-- BRIDGE -->
+  <section class="screen" id="bridge" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="b_stars">0</span></span></div>
+    <div class="stage">
+      <div class="progress"><i id="b_prog"></i></div>
+      <p class="sub">הגשר · <span id="b_n">1</span> מתוך <span id="b_tot">6</span></p>
+      <h2 class="prompt" id="b_q">איזה רכיב מחבר בין השניים?</h2>
+      <div class="pair" id="b_pair"></div>
+      <div class="choices" id="b_choices"></div>
+      <div id="b_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- TRIVIA -->
+  <section class="screen" id="trivia" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="t_stars">0</span></span></div>
+    <div class="stage">
+      <div class="progress"><i id="t_prog"></i></div>
+      <p class="sub">מכירים את שירנסקי מארח? · <span id="t_n">1</span> מתוך <span id="t_tot">20</span></p>
+      <h2 class="prompt" id="t_q"></h2>
+      <div class="choices" id="t_choices"></div>
+      <div id="t_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- MEMORY -->
+  <section class="screen" id="memory" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="m_stars">0</span></span></div>
+    <div class="stage">
+      <h2 class="prompt">זיכרון בצלחת</h2>
+      <p class="sub">הופכים שני קלפים ומוצאים את אותה המנה פעמיים. כל המנות מהתפריטים של שירנסקי מארח. ניסיונות: <b id="m_moves">0</b></p>
+      <div class="memgrid" id="m_grid"></div>
+      <div id="m_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- MATCH -->
+  <section class="screen" id="puzzle" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="p_stars">0</span></span></div>
+    <div class="stage">
+      <div class="progress"><i id="p_prog"></i></div>
+      <p class="sub">תמונה ושם · סיבוב <span id="p_n">1</span> מתוך 3</p>
+      <h2 class="prompt">לוחצים על תמונה, ואז על השם שלה</h2>
+      <div class="mgrid" id="p_photos"></div>
+      <div class="choices" id="p_names"></div>
+      <div id="p_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- ZOOM -->
+  <section class="screen" id="zoom" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="z_stars">0</span></span></div>
+    <div class="stage">
+      <div class="progress"><i id="z_prog"></i></div>
+      <p class="sub">מה בצלחת? · <span id="z_n">1</span> מתוך <span id="z_tot">4</span></p>
+      <h2 class="prompt">מזהים את המנה מהתקריב?</h2>
+      <div class="zoom" id="z_box"></div>
+      <div class="choices" id="z_choices"></div>
+      <div id="z_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>לובי</button></div>
+    <div class="result">
+      <span class="eyebrow">התואר שלך</span>
+      <h2 id="r_title"></h2>
+      <div class="score"><span id="r_score">0</span><span style="font-size:22px;color:var(--muted)"> / <span id="r_max">0</span></span></div>
+      <p class="scoreline" id="r_line"></p>
+      <div class="card">
+        <div class="tags" id="r_tags"></div>
+      </div>
+      <div class="actions">
+        <a class="btn gold" id="shareBtn" href="#" target="_blank" rel="noopener">לשתף את התוצאה בוואטסאפ</a>
+        <a class="btn primary" href="https://wa.me/972544714766?text=%D7%94%D7%99%D7%99%20%D7%A9%D7%99%D7%A8%D7%9F%2C%20%D7%A9%D7%99%D7%97%D7%A7%D7%AA%D7%99%20%D7%91%D7%9E%D7%A9%D7%97%D7%A7%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%A2%D7%A8%D7%91%20%D7%91%D7%A9%D7%99%D7%A8%D7%A0%D7%A1%D7%A7%D7%99%20%D7%9E%D7%90%D7%A8%D7%97" target="_blank" rel="noopener">להזמין ערב בשירנסקי מארח</a>
+        <button class="btn ghost" id="copyBtn">להעתיק את הטקסט</button>
+        <button class="btn ghost" id="resetBtn">לשחק מהתחלה</button>
+      </div>
+      <p class="note">שירנסקי מארח · שף פרטי בחיפה · 054-4714766</p>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast">הועתק</div>
+
+<script>
+/* ===================== DATA ===================== */
+const BRAND = "שירנסקי מארח";
+
+// --- Photos: fill `src` with the dish photos (data URIs or published files). While empty, a drawn plate placeholder is used.
+const PHOTOS = [
+  {id:"pumpkin",    name:"ריזוטו ודלעת חרוכה",       hint:"ריזוטו דלעת, דלעת חרוכה, גבינה וגרעיני דלעת קלויים. מנה של סתיו וחורף",  src:"img/pumpkin.jpg"},
+  {id:"beet",       name:"סלק צלוי ופלפל חרוך",      hint:"פרוסות סלק צלוי, פלפל חרוך, בצל ירוק ונגיעות קרם",                         src:"img/beet.jpg"},
+  {id:"carpaccio",  name:"קרפצ'ו בקר ומנגו",         hint:"בקר נא דק, מנגו, אבוקדו וצמצום בלסמי. קיץ על הצלחת",                        src:"img/carpaccio.jpg"},
+  {id:"watermelon", name:"אבטיח ופטה על לבנה",       hint:"אבטיח, פטה, זיתים ורוקט על לבנה. חומציות קרה של קיץ",                       src:"img/watermelon.jpg"},
+  {id:"tuna",       name:"דג נא בסויה וצנון",        hint:"דג נא, סויה ושמן זית, צנונית, בצל ירוק, צ'ילי ושומשום. הים קודם",             src:"img/tuna.jpg"},
+  {id:"croquette",  name:"קרוקט פריך על קרם אפונה",  hint:"קרוקט מטוגן על קרם אפונה ירוק, עם גבינה מפוררת",                            src:"img/croquette.jpg"},
+];
+
+// --- הגשר: two ingredients, pick the third. All from the flavor DNA.
+// --- הגשר: real dishes that were served at Shiranski Hosting evenings. Two ingredients, pick the third.
+const BRIDGE = [
+  {dish:"סלמון כבוש בכרוב סגול", a:"סלמון כבוש", b:"כרוב סגול", ok:"שמיר", opts:["שמיר","קינמון","קטשופ","חמאת בוטנים"],
+   why:"מנת הפתיחה המצולמת ביותר של "+BRAND+". דג כבוש, כרוב סגול לפריכות וצבע, ושמיר שנותן את הרעננות של הים."},
+  {dish:"קרפצ'ו שייטל ואדומים", a:"שייטל נא", b:"רוקט", ok:"קרמל שום", opts:["קרמל שום","ריבת תות","וניל","יוגורט"],
+   why:"קרפצ'ו שייטל הוא מנת ראשונה קבועה בערבי "+BRAND+". קרמל שום נותן לבשר הנא עומק ומתיקות, והרוקט חותך."},
+  {dish:"סביצ'ה דג ים ברוטב אבוקדו והדרים", a:"דג ים טרי", b:"הדרים", ok:"תפוח עץ", opts:["תפוח עץ","בננה","קקאו","חרדל"],
+   why:"בסביצ'ה של "+BRAND+" יש תמיד פריכות: תפוח עץ, צנונית ומלפפון לצד הדג והחומציות."},
+  {dish:"סשימי ופונזו", a:"סשימי דג ים", b:"פונזו", ok:"שמן שומשום", opts:["שמן שומשום","שמנת","סילאן","פפריקה"],
+   why:"פונזו נותן חומציות ואומאמי, ושמן שומשום קלוי עוטף. גשר קלאסי בין הים למטבח האסייתי."},
+  {dish:"קישואים וארטישוק", a:"קישואים מטוגנים", b:"ארטישוק רומאי", ok:"צזיקי", opts:["צזיקי","רוטב ברביקיו","שוקולד","מיונז"],
+   why:"ירקות מטוגנים צריכים קור וחומציות. צזיקי אוורירי וטחינה לימונית, ככה זה הוגש אצל "+BRAND+"."},
+  {dish:"דלעת זהובה ופטה", a:"דלעת צלויה", b:"פטה", ok:"מרווה פריכה", opts:["מרווה פריכה","כוסברה","צימוקים","קטשופ"],
+   why:"מתיקות הדלעת, מליחות הפטה, ומרווה מטוגנת לפריכות וארומה. עם פניני רימון ודבש. מנת סתיו."},
+  {dish:"קרפצ'יו בקר ופרמזן", a:"קרפצ'יו בקר", b:"פרמזן", ok:"לימון", opts:["לימון","חלב","סוכר","כמון"],
+   why:"פרמזן הוא העומק, לימון הוא החדות. זה המשולש של "+BRAND+" על הצלחת הכי פשוטה."},
+  {dish:"שומר ותפוח ירוק", a:"שומר פריך", b:"תפוח ירוק", ok:"נענע", opts:["נענע","רוזמרין","קפה","חמאה"],
+   why:"סלט פריך וחומצי, ונענע שמרעננת. עם פרמזן ולימון, הוגש בערב יום נישואים."},
+  {dish:"ריזוטו ודלעת", a:"ריזוטו", b:"דלעת צלויה", ok:"מיסו מתוק", opts:["מיסו מתוק","רוטב עגבניות","חרדל","יוגורט"],
+   why:"הדלעת נצלית במיסו מתוק: עומק אומאמי על מתיקות. ככה נבנה הריזוטו בארוחה זוגית ב"+BRAND+"."},
+  {dish:"דג ואפונה", a:"פילה דג", b:"קרם אפונה", ok:"ברי מקורמלת", opts:["ברי מקורמלת","תפוחי אדמה","אורז","ריבת תות"],
+   why:"ירוק ורענן מתחת, ופרי מקורמל שנותן מתיקות ומרירות קלה מעל. מנה מארוחה זוגית."},
+  {dish:"פילה ובצל", a:"פילה בקר", b:"ריבת בצל", ok:"קרם", opts:["קרם","פונזו","אבטיח","כוסברה"],
+   why:"ריבת בצל היא הכנת בית של "+BRAND+". כקרם מתחת לפילה, היא נותנת מתיקות עמוקה של קרמול ארוך."},
+  {dish:"סלמון בזיגוג מיסו", a:"סלמון צלוי", b:"מיסו", ok:"אורז יסמין", opts:["אורז יסמין","פירה","פסטה","לחם"],
+   why:"הגלייז של המיסו צריך מצע נקי שסופג. אורז יסמין ירוק, עם עשבים."},
+  {dish:"ניוקי ופטריות", a:"ניוקי", b:"פטריות", ok:"פולנטה", opts:["פולנטה","טחינה","פונזו","מנגו"],
+   why:"רוטב פולנטה קרמי מחבק את הניוקי, והפטריות נותנות עומק. מנת חורף מהתפריט הקלאסי."},
+  {dish:"פרגיות בחמאה ודבש", a:"פרגיות", b:"חמאה וטימין", ok:"דבש וחרדל", opts:["דבש וחרדל","סויה וג'ינג'ר","שוקולד","יוגורט"],
+   why:"מתוק-חריף על עוף בחמאה. לצד סלט מלפפונים אסייתי שחותך את השומן."},
+  {dish:"קרפצ'ו קולורבי", a:"קולורבי צלוי", b:"קונפי שום", ok:"ויניגרט חרדל", opts:["ויניגרט חרדל","סילאן","קטשופ","קפה"],
+   why:"קרפצ'ו ללא בשר, לערב כשר. קולורבי צלוי, קונפי שום, קרם פרש וחרדל. הגשר הוא החומציות."},
+  {dish:"סלט סלקים ואגוזים", a:"סלק צלוי", b:"אגוזים", ok:"טחינה", opts:["טחינה","שמנת מתוקה","רוטב דגים","מנגו"],
+   why:"סלק מתוק, אגוזים פריכים, וטחינה שמחברת. עם עדשים וויניגרט בלסמי."},
+  {dish:"ארנצ'יני בשר מפורק", a:"כדורי ריזוטו", b:"ראגו בשר", ok:"קרם טחינה", opts:["קרם טחינה","קטשופ","ריבה","שוקולד"],
+   why:"מטוגן ועשיר צריך משהו קר ונקי. קרם טחינה וסלט אדום, ככה הוגש בארוחה משפחתית."},
+  {dish:"אבטיח ופטה", a:"אבטיח", b:"פטה", ok:"זיתים", opts:["זיתים","בננה","שוקולד","בצל מטוגן"],
+   why:"מתוק, מלוח, ומלוח-מר. על לבנה עם רוקט. חומציות קרה של קיץ."},
+  {dish:"טרטר ויוזו", a:"קוביות דג ים", b:"ויניגרט הדרים ויוזו", ok:"מלפפון אסייתי", opts:["מלפפון אסייתי","תפוחי אדמה","גבינה צהובה","ריבת בצל"],
+   why:"דג נא עם חומציות הדרים צריך פריכות קרה. סלטון ירוקים ומלפפון אסייתי, מערב בלי מוצרי חלב."},
+  {dish:"בורטה ועגבניות סוף הקיץ", a:"בורטה", b:"עגבניות", ok:"בזיליקום", opts:["בזיליקום","נענע","כמון","ג'ינג'ר"],
+   why:"שלושה רכיבים, שמן זית ומלח. כשחומר הגלם בשיא, לא נוגעים בו יותר מדי."},
+  {dish:"חציל שחור מהאש וטחינה", a:"חציל שרוף", b:"טחינה גולמית", ok:"שום", opts:["שום","סילאן","מנגו","שמנת"],
+   why:"מטבל פתיחה קבוע ב"+BRAND+". העשן של החציל, הטחינה, ושום שמחדד. עם פטרוזיליה."},
+  {dish:"לבנה משי וזעתר בר", a:"לבנה", b:"זעתר", ok:"לימון כבוש", opts:["לימון כבוש","דבש","קקאו","חרדל"],
+   why:"השכבה המקומית של "+BRAND+": לבנה, זעתר, שמן זית, ולימון כבוש שנותן מליחות וחומציות."},
+  {dish:"סלט ארטישוק ודג מעושן", a:"לבבות ארטישוק צלויים", b:"דג מעושן", ok:"הדרים", opts:["הדרים","שוקולד","קטשופ","אורז"],
+   why:"עשן וחמיצות. הארטישוק הצלוי מתוק וקצת מריר, והדרים מרימים את הכול."},
+  {dish:"אסאדו בבישול ארוך", a:"אסאדו", b:"בישול ארוך", ok:"פירה חלבי", opts:["פירה חלבי","סלט ירוק","סושי","גלידה"],
+   why:"בשר שנמס אחרי שעות ארוכות צריך מצע רך ועשיר. ככה הוגש בערב קלאסי-צרפתי."},
+  {dish:"חסה, תפוח ירוק ופקאן", a:"חסה", b:"תפוח ירוק", ok:"פקאן מקורמל", opts:["פקאן מקורמל","בצל מטוגן","טונה","שוקולד"],
+   why:"פריך על פריך, עם מתיקות של קרמול. סלט שמנקה את הפה בין הראשונות לעיקריות."},
+];
+
+// --- Trivia. (Founding year marked for Shiran to confirm.)
+const TRIVIA = [
+  {q:"באיזו עיר נמצא הבית של "+BRAND+"?", ok:"חיפה", opts:["חיפה","תל אביב","עכו","זכרון יעקב"],
+   why:"מארחים בבית השף בחיפה, ומגיעים לבית הלקוח בצפון, בשרון ובמרכז."},
+  {q:"באיזו מסעדה חיפאית התמקצע השף של "+BRAND+"?", ok:"נמל 24", opts:["נמל 24","ביסטרו בכרמל","מסעדת דגים בעכו","בית קפה במושבה"],
+   why:"הדיוק של מסעדה הגיע מנמל 24. החום והנדיבות הם של בית."},
+  {q:"ממתי פועל "+BRAND+"?", ok:"2018", opts:["2018","2012","2021","2024"],
+   why:"הערבים הראשונים שתועדו הם מסוף 2018. מאז, כל ערב הוא ערב אחר."},
+  {q:"כמה מנות יש בארוחה זוגית ב"+BRAND+"?", ok:"6", opts:["6","4","8","12"],
+   why:"6 מנות אישיות, בצלחות בנויות ויפות, בקצב של ערב זוגי."},
+  {q:"ואיך מוגשת ארוחת קבוצה?", ok:"10 מנות במרכז השולחן", opts:["10 מנות במרכז השולחן","מזנון","צלחות אישיות","מגשי ביס"],
+   why:"עד 10 סועדים, המנות מגיעות בגלים למרכז השולחן, וכולם מושיטים יד."},
+  {q:"מה לא תמצאו ב"+BRAND+"?", ok:"מנות ביס", opts:["מנות ביס","מנות שלמות","טעמי עונה","רטבי בית"],
+   why:"אין מנות ביס. כל מנה היא מנה מלאה, ואף אחד לא יוצא רעב."},
+  {q:"למה התפריט ב"+BRAND+" אף פעם לא חוזר על עצמו?", ok:"כי הוא משתנה לפי העונה", opts:["כי הוא משתנה לפי העונה","כי השף מגריל מנות","כי הלקוח בוחר מרשימה","כי אין תפריט"],
+   why:"החתימה קבועה, חומר הגלם העונתי מתחלף. גם לקוח קבוע מקבל תפריט אחר בכל עונה."},
+  {q:"איזה צמד הוא \"הגשר בין מזרח למערב\" ב"+BRAND+"?", ok:"סויה ופרמזן", opts:["סויה ופרמזן","שום ובזיליקום","קארי וקוקוס","מלח ופלפל"],
+   why:"שניהם מותססים או מיושנים, ושניהם מלאים באומאמי. לכן הם מתחברים טבעי."},
+  {q:"מה מכינים בעצמם, במטבח של "+BRAND+"?", ok:"ריבת שרי", opts:["ריבת שרי","קטשופ","מיונז","חמאה חומה"],
+   why:"ריבת שרי מעגבניות שרי, ריבת בצל, שקדים מסוכרים ודוחא ים. הכנות הבית."},
+  {q:"איזה כלי נותן למנות את ה\"שיא\" ב"+BRAND+"?", ok:"ברנר", opts:["ברנר","מיקרוגל","טוסטר","סיר לחץ"],
+   why:"ההפתעה באה מטכניקה: ברנר, חריכה, בישול ארוך. לא מרכיב אקזוטי."},
+  {q:"איך קוראים לכלבה שמופיעה בתמונות של "+BRAND+"?", ok:"אליס", opts:["אליס","לונה","בלה","מוקה"],
+   why:"רוב האנשים מכירים את שירן מהמטבח. את אליס מכירים כולם."},
+  {q:"איפה אליס נמצאת כשיש אורחים בבית?", ok:"ליד השולחן, ליתר ביטחון", opts:["ליד השולחן, ליתר ביטחון","ישנה בחדר","במרפסת","במטבח, ליד הסירים"],
+   why:"היא לא יודעת מה זה לחץ. היא יודעת לחכות ליד הדלת, ולשמוח כאילו לא ראתה אותך שנה."},
+  {q:"כמה מסלולי אירוח יש ב"+BRAND+"?", ok:"3", opts:["3","1","5","8"],
+   why:"שולחן אינטימי לזוג, אירוח חגיגי בבית השף עד 10 סועדים, ושולחן שף אצלכם בבית."},
+  {q:"מה קורה למטבח שלכם אחרי \"שולחן שף אצלכם\"?", ok:"נשאר מבריק ונקי", opts:["נשאר מבריק ונקי","נשאר לכם לשטוף","מלא בסירים","סגור לשבוע"],
+   why:"האוכל מוכן מראש ונסגר אצלכם, ובסוף משאירים מטבח מבריק ונקי."},
+  {q:"לאן מגיע "+BRAND+" לבית הלקוח?", ok:"צפון, שרון ומרכז", opts:["צפון, שרון ומרכז","רק חיפה","רק הצפון","כל הארץ, כולל אילת"],
+   why:"מארחים בבית השף בחיפה, ומגיעים לבית הלקוח בצפון, בשרון ובמרכז."},
+  {q:"איזה מטבח לא נמצא ברשימת הסגנונות של "+BRAND+"?", ok:"הודי", opts:["הודי","אסייתי","טקס-מקס","דרום אמריקאי"],
+   why:"ישראלי עכשווי, אסייתי, איטלקי, טקס-מקס ודרום אמריקאי. צ'אטני וטעמים הודיים נשארים בחוץ."},
+  {q:"לפי מה נבחרים הדגים לערב ב"+BRAND+"?", ok:"לפי מה שטרי בנמל באותו שבוע", opts:["לפי מה שטרי בנמל באותו שבוע","לפי טבלה קבועה","לפי מה שבמקפיא","לפי מחיר"],
+   why:"הים קודם. הדג שטרי השבוע מוביל, והשאר משרת אותו."},
+  {q:"מה זאת \"דוחא ים\" של "+BRAND+"?", ok:"פירורי שקדים, שומשום וזרעי שומר", opts:["פירורי שקדים, שומשום וזרעי שומר","רוטב דגים","מרק","קינוח"],
+   why:"הכנת בית שמפזרים מעל דגים וירקות. פריכות וארומה בבת אחת, עם מלח ים."},
+  {q:"עד כמה סועדים מארחים בבית השף של "+BRAND+"?", ok:"10", opts:["10","4","20","50"],
+   why:"אירוח בוטיק: חדר פרטי, עד 10 סועדים, 8 עד 10 מנות מרכז שולחן."},
+  {q:"איך מתחילים לתכנן ערב עם "+BRAND+"?", ok:"מספרים על הערב, ובונים תפריט יחד", opts:["מספרים על הערב, ובונים תפריט יחד","בוחרים מתפריט קבוע","מגיעים בלי לתאם","מזמינים באפליקציה"],
+   why:"תאריך, מספר סועדים ומה חוגגים. אחר כך התפריט נבנה יחד, עד שהוא מושלם."},
+];
+
+// --- Memory pairs
+// --- Memory: find the two cards with the same dish (dishes from served menus)
+const DISHES_MEM = ["קרפצ'ו שייטל","סביצ'ה דג ים","ריזוטו דלעת","סשימי ופונזו","פילה בקר וריבת בצל","אבטיח ופטה","קישואים וארטישוק","ניוקי ופטריות","סלמון כבוש"];
+let PAIRS = [];
+
+/* ===================== STATE ===================== */
+const KEY = "shiranski-game-v1";
+let S = {bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, done:{}};
+try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = s; }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4};
+
+const $ = (id)=>document.getElementById(id);
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.hidden = s.id!==id); window.scrollTo({top:0}); }
+document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",()=>{ renderLobby(); show("lobby"); }));
+
+/* Placeholder plate (SVG) used until photos are added */
+function platePlaceholder(name){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="#28241F"/><circle cx="200" cy="200" r="150" fill="#F4EEE3"/><circle cx="200" cy="200" r="120" fill="none" stroke="#A9AC86" stroke-width="3"/><circle cx="200" cy="200" r="110" fill="none" stroke="#A9AC86" stroke-width="1"/><circle cx="185" cy="195" r="48" fill="#C9A96E"/><circle cx="225" cy="215" r="30" fill="#7E8160"/><circle cx="165" cy="230" r="16" fill="#C97A6E"/><path d="M110 60 c40 60 60 70 120 60" stroke="#A9AC86" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`;
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
+function photoSrc(p){ return p.src || platePlaceholder(p.name); }
+
+/* ===================== LOBBY ===================== */
+const GAMES = [
+  {id:"bridge", name:"הגשר", desc:"20 מנות אמיתיות מהתפריטים. מה הרכיב השלישי?", time:"4 דק׳", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
+  {id:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
+  {id:"memory", name:"זיכרון בצלחת", desc:"מוצאים את אותה המנה פעמיים.", time:"2 דק׳", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
+  {id:"puzzle", name:"תמונה ושם", desc:"מתאימים כל תמונה לשם המנה שלה.", time:"2 דק׳", ico:'<path d="M4 4h6v3a2 2 0 1 0 4 0V4h6v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/>'},
+  {id:"zoom", name:"מה בצלחת?", desc:"תקריב שהולך ונפתח. מזהים את המנה?", time:"1 דק׳", ico:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5M11 8v6M8 11h6"/>'},
+];
+function totalStars(){ return S.bridge+S.trivia+S.memory+S.puzzle+S.zoom; }
+function totalMax(){ return Object.values(MAX).reduce((a,b)=>a+b,0); }
+function renderLobby(){
+  $("gamelist").innerHTML = GAMES.map(g=>`
+    <button class="game" data-g="${g.id}">
+      <span class="ico"><svg viewBox="0 0 24 24">${g.ico}</svg></span>
+      <span><h3>${g.name}</h3><p>${g.desc}</p></span>
+      <span class="meta"><span>${g.time}</span><span class="${S.done[g.id]?'done':''}">${S.done[g.id]? '★ '+S[g.id]+'/'+MAX[g.id] : '○ '+MAX[g.id]+' כוכבים'}</span></span>
+    </button>`).join("");
+  $("gamelist").querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.g)));
+}
+$("finishBtn").addEventListener("click", renderResult);
+function start(id){
+  if(id==="bridge") startBridge();
+  if(id==="trivia") startTrivia();
+  if(id==="memory") startMemory();
+  if(id==="puzzle") startPuzzle();
+  if(id==="zoom")   startZoom();
+}
+function glow(el){ el.classList.remove("glow"); void el.offsetWidth; el.classList.add("glow"); if(navigator.vibrate) try{navigator.vibrate(30);}catch(e){} }
+function setStars(prefix, n){ $(prefix+"_stars").textContent = n; }
+
+/* ===================== BRIDGE ===================== */
+let b = {i:0, score:0, order:[]};
+function startBridge(){
+  b = {i:0, score:0, order:shuffle(BRIDGE.map((_,i)=>i)).slice(0,20)};
+  $("b_tot").textContent = 20; show("bridge"); renderBridge();
+}
+function renderBridge(){
+  const r = BRIDGE[b.order[b.i]];
+  $("b_q").textContent = "מנה מהתפריט: "+r.dish+". מה הרכיב השלישי?";
+  $("b_n").textContent = b.i+1; $("b_prog").style.width = (b.i/20*100)+"%"; setStars("b", b.score);
+  $("b_pair").innerHTML = `<span class="ing">${r.a}</span><span class="plus">+</span><span class="ing">${r.b}</span><span class="plus">+</span><span class="ing q">?</span>`;
+  $("b_reveal").innerHTML = "";
+  $("b_choices").innerHTML = shuffle(r.opts).map(o=>`<button class="choice">${o}</button>`).join("");
+  $("b_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
+    const good = btn.textContent===r.ok;
+    $("b_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
+    if(good){ b.score++; glow(btn); } else btn.classList.add("bad");
+    setStars("b", b.score);
+    const last = b.i===19;
+    $("b_reveal").innerHTML = `<div class="reveal"><b>${good?"בדיוק.":"כמעט."} השילוב ב${BRAND}: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="b_next">${last?"לסיום המשחק":"לשילוב הבא"}</button>`;
+    $("b_next").addEventListener("click",()=>{ if(last){ S.bridge=b.score; S.done.bridge=true; save(); renderLobby(); show("lobby"); } else { b.i++; renderBridge(); } });
+  }));
+}
+
+/* ===================== TRIVIA ===================== */
+let t = {i:0, score:0, order:[]};
+function startTrivia(){
+  t = {i:0, score:0, order:TRIVIA.map((_,i)=>i)};
+  $("t_tot").textContent = TRIVIA.length; show("trivia"); renderTrivia();
+}
+function renderTrivia(){
+  const r = TRIVIA[t.order[t.i]];
+  $("t_n").textContent = t.i+1; $("t_prog").style.width = (t.i/TRIVIA.length*100)+"%"; setStars("t", t.score);
+  $("t_q").textContent = r.q; $("t_reveal").innerHTML = "";
+  $("t_choices").innerHTML = shuffle(r.opts).map(o=>`<button class="choice">${o}</button>`).join("");
+  $("t_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
+    const good = btn.textContent===r.ok;
+    $("t_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
+    if(good){ t.score++; glow(btn); } else btn.classList.add("bad");
+    setStars("t", t.score);
+    const last = t.i===TRIVIA.length-1;
+    $("t_reveal").innerHTML = `<div class="reveal"><b>${good?"נכון.":"התשובה: "+r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="t_next">${last?"לסיום המשחק":"לשאלה הבאה"}</button>`;
+    $("t_next").addEventListener("click",()=>{ if(last){ S.trivia=t.score; S.done.trivia=true; save(); renderLobby(); show("lobby"); } else { t.i++; renderTrivia(); } });
+  }));
+}
+
+/* ===================== MEMORY ===================== */
+let m = {open:[], matched:0, moves:0, lock:false};
+function startMemory(){
+  m = {open:[], matched:0, moves:0, lock:false};
+  PAIRS = shuffle(DISHES_MEM).slice(0,6).map(d=>[d,d]);
+  const cards = shuffle(PAIRS.flatMap((p,i)=>[{t:p[0],k:i},{t:p[1],k:i}]));
+  $("m_moves").textContent = 0; $("m_reveal").innerHTML = ""; setStars("m",0);
+  $("m_grid").innerHTML = cards.map((c,i)=>`<button class="mem" data-k="${c.k}" data-i="${i}" aria-label="קלף"><span class="in"><span class="f"><svg viewBox="0 0 24 24"><path d="M12 3c3 4 5 6 5 9a5 5 0 0 1-10 0c0-3 2-5 5-9z"/></svg></span><span class="b">${c.t}</span></span></button>`).join("");
+  $("m_grid").querySelectorAll(".mem").forEach(c=>c.addEventListener("click",()=>flip(c)));
+  show("memory");
+}
+function flip(c){
+  if(m.lock || c.classList.contains("flip")) return;
+  c.classList.add("flip"); m.open.push(c);
+  if(m.open.length<2) return;
+  m.moves++; $("m_moves").textContent = m.moves; m.lock = true;
+  const [a,bb] = m.open;
+  if(a.dataset.k===bb.dataset.k){
+    setTimeout(()=>{ a.classList.add("won"); bb.classList.add("won"); glow(a); glow(bb); m.open=[]; m.lock=false; m.matched++;
+      if(m.matched===PAIRS.length) finishMemory(); },350);
+  } else {
+    setTimeout(()=>{ a.classList.remove("flip"); bb.classList.remove("flip"); m.open=[]; m.lock=false; },800);
+  }
+}
+function finishMemory(){
+  const stars = m.moves<=9?3 : m.moves<=13?2 : 1;
+  S.memory = stars; S.done.memory = true; save(); setStars("m", stars);
+  $("m_reveal").innerHTML = `<div class="reveal"><b>${m.moves} ניסיונות, ${stars} כוכבים</b><p>שש מנות אמיתיות מהתפריטים של ${BRAND}. בפעם הבאה יהיו אחרות.</p></div><button class="btn primary" id="m_done">חזרה ללובי</button>`;
+  $("m_done").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
+}
+
+/* ===================== MATCH (photo ↔ name) ===================== */
+let p = {round:0, stars:0, sel:null, errors:0, set:[], left:0, pool:[]};
+function startPuzzle(){
+  p = {round:0, stars:0, sel:null, errors:0, set:[], left:0, pool:shuffle(PHOTOS)};
+  $("p_reveal").innerHTML=""; setStars("p",0);
+  show("puzzle"); renderMatch();
+}
+function renderMatch(){
+  // 3 photos per round; cycle the pool so rounds differ
+  const start = (p.round*3) % PHOTOS.length;
+  p.set = [0,1,2].map(i=>p.pool[(start+i)%PHOTOS.length]);
+  p.sel=null; p.errors=0; p.left=3;
+  $("p_n").textContent = p.round+1; $("p_prog").style.width=(p.round/3*100)+"%";
+  $("p_reveal").innerHTML="";
+  $("p_photos").innerHTML = shuffle(p.set).map(ph=>`<button class="ph" data-id="${ph.id}" aria-label="תמונת מנה"><img src="${photoSrc(ph)}" alt=""></button>`).join("");
+  $("p_names").innerHTML = shuffle(p.set).map(ph=>`<button class="choice" data-id="${ph.id}">${ph.name}</button>`).join("");
+  $("p_photos").querySelectorAll(".ph").forEach(b=>b.addEventListener("click",()=>{
+    if(b.classList.contains("done")) return;
+    $("p_photos").querySelectorAll(".ph").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); p.sel=b.dataset.id;
+  }));
+  $("p_names").querySelectorAll(".choice").forEach(n=>n.addEventListener("click",()=>{
+    if(n.classList.contains("done")) return;
+    if(!p.sel){ n.classList.add("shake"); setTimeout(()=>n.classList.remove("shake"),300); return; }
+    const photoBtn = $("p_photos").querySelector(`.ph[data-id="${p.sel}"]`);
+    if(n.dataset.id===p.sel){
+      photoBtn.classList.remove("sel"); photoBtn.classList.add("done"); n.classList.add("done"); glow(n);
+      p.sel=null; p.left--;
+      if(p.left===0) finishMatchRound();
+    } else {
+      p.errors++; photoBtn.classList.add("shake"); n.classList.add("bad");
+      setTimeout(()=>{photoBtn.classList.remove("shake"); n.classList.remove("bad");},400);
+    }
+  }));
+}
+function finishMatchRound(){
+  const won = p.errors===0; if(won) p.stars++;
+  setStars("p", p.stars);
+  const last = p.round===2;
+  const names = p.set.map(x=>`<b>${x.name}</b>: ${x.hint}`).join("<br>");
+  $("p_reveal").innerHTML = `<div class="reveal"><b>${won?"בלי טעויות. כוכב.":"הסיבוב הושלם, עם "+p.errors+" טעויות."}</b><p>${names}</p></div><button class="btn primary" id="p_next">${last?"לסיום המשחק":"לסיבוב הבא"}</button>`;
+  $("p_next").addEventListener("click",()=>{ if(last){ S.puzzle=p.stars; S.done.puzzle=true; save(); renderLobby(); show("lobby"); } else { p.round++; renderMatch(); } });
+}
+
+/* ===================== ZOOM ===================== */
+let z = {i:0, score:0, set:[], level:0};
+function startZoom(){
+  z = {i:0, score:0, set:shuffle(PHOTOS).slice(0,4), level:0};
+  $("z_tot").textContent = z.set.length; show("zoom"); renderZoom();
+}
+function renderZoom(){
+  const ph = z.set[z.i]; z.level = 0;
+  $("z_n").textContent = z.i+1; $("z_prog").style.width = (z.i/z.set.length*100)+"%"; setStars("z", z.score);
+  $("z_box").innerHTML = `<img src="${photoSrc(ph)}" alt="" style="--z:4;--ox:${35+Math.random()*30}%;--oy:${35+Math.random()*30}%">`;
+  $("z_reveal").innerHTML = "";
+  const opts = shuffle([ph.name, ...shuffle(PHOTOS.filter(x=>x.id!==ph.id)).slice(0,3).map(x=>x.name)]);
+  $("z_choices").innerHTML = opts.map(o=>`<button class="choice">${o}</button>`).join("") + `<button class="btn ghost" id="z_hint">להתרחק קצת</button>`;
+  $("z_hint").addEventListener("click",()=>{ z.level++; const img=$("z_box").querySelector("img"); img.style.setProperty("--z", z.level>=2?1:2.2); if(z.level>=2) $("z_hint").disabled=true; });
+  $("z_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
+    const good = btn.textContent===ph.name;
+    $("z_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===ph.name) x.classList.add("ok"); });
+    $("z_box").querySelector("img").style.setProperty("--z",1);
+    if(good){ z.score++; glow(btn); } else btn.classList.add("bad");
+    setStars("z", z.score);
+    const last = z.i===z.set.length-1;
+    $("z_reveal").innerHTML = `<div class="reveal"><b>${ph.name}</b><p>${ph.hint}.</p></div><button class="btn primary" id="z_next">${last?"לסיום המשחק":"לתמונה הבאה"}</button>`;
+    $("z_next").addEventListener("click",()=>{ if(last){ S.zoom=z.score; S.done.zoom=true; save(); renderLobby(); show("lobby"); } else { z.i++; renderZoom(); } });
+  }));
+}
+
+/* ===================== RESULT ===================== */
+function titleFor(score, max){
+  const r = score/max;
+  if(r>=.9) return "סו-שף של "+BRAND;
+  if(r>=.7) return "אורח של כבוד ב"+BRAND;
+  if(r>=.45) return "אורח קבוע ב"+BRAND;
+  return "אורח חדש ב"+BRAND;
+}
+function renderResult(){
+  const score = totalStars(), max = totalMax();
+  const title = titleFor(score,max);
+  $("r_title").textContent = title; $("r_score").textContent = score; $("r_max").textContent = max;
+  const played = GAMES.filter(g=>S.done[g.id]).length;
+  $("r_line").textContent = played===0 ? "עוד לא שיחקת. הכוכבים מחכים בלובי." : played<GAMES.length ? `שיחקת ${played} מתוך ${GAMES.length} משחקים. אפשר להמשיך לאסוף.` : "שיחקת את כל חמשת המשחקים.";
+  $("r_tags").innerHTML = GAMES.map(g=>`<span class="tag ${S.done[g.id]?'on':''}">${g.name} ${S.done[g.id]?'★'+S[g.id]:''}</span>`).join("");
+  const text = `${title} 🍽️\n${score} מתוך ${max} כוכבים במשחק "המטבח של ${BRAND}".\nתנסו גם: ${location.href.split('#')[0]}`;
+  $("shareBtn").href = "https://wa.me/?text="+encodeURIComponent(text);
+  $("copyBtn").onclick = ()=>{ navigator.clipboard.writeText(text).then(()=>toast("הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); };
+  show("result");
+}
+$("resetBtn").addEventListener("click",()=>{ S={bridge:0,trivia:0,memory:0,puzzle:0,zoom:0,done:{}}; save(); renderLobby(); show("lobby"); });
+function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
+
+/* boot */
+renderLobby(); show("lobby");
+</script>
+</body>
+</html>
