@@ -23,7 +23,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offse
 .stars svg{width:18px;height:18px;fill:var(--gold)}
 
 /* lobby */
-.brand{display:flex;flex-direction:column;gap:6px;padding-block:8px 4px;border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;gap:6px;padding-block:8px 14px;border-bottom:1px solid var(--line)}
 .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--olive);text-transform:uppercase;font-weight:600}
 h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;margin:0;text-wrap:balance}
 .lede{color:var(--muted);margin:0;max-width:40ch}
@@ -110,3 +110,19 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 @keyframes glow{0%{box-shadow:0 0 0 0 rgba(201,169,110,.6)}100%{box-shadow:0 0 0 24px rgba(201,169,110,0)}}
 .glow{animation:glow .7s ease-out}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* main menu tiles: 2x2 squares, real dish photo behind each category */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{position:relative;aspect-ratio:1;border-radius:18px;overflow:hidden;text-align:right;display:flex;flex-direction:column;justify-content:space-between;padding:12px;
+  background-color:var(--card);background-position:center;background-size:cover;background-repeat:no-repeat;border:1px solid var(--line);isolation:isolate;transition:transform .15s,border-color .2s}
+.tile::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(20,18,16,.15) 0%,rgba(20,18,16,.35) 40%,rgba(20,18,16,.92) 100%)}
+.tile:hover{border-color:var(--gold)}
+.tile:active{transform:scale(.97)}
+.tile-ico{align-self:flex-start;width:38px;height:38px;border-radius:12px;background:rgba(20,18,16,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;border:1px solid rgba(244,238,227,.15)}
+.tile-ico svg{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile-body{display:grid;gap:4px}
+.tile h3{margin:0;font-family:var(--display);font-size:19px;line-height:1.15;font-weight:700;text-wrap:balance;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.tile-meta{font-size:12.5px;color:#E3DACB}
+.tile-meta .done{color:var(--gold);font-weight:700}
+.tile-bar{height:3px;border-radius:3px;background:rgba(244,238,227,.2);overflow:hidden}
+.tile-bar i{display:block;height:100%;background:var(--gold)}

@@ -20,10 +20,10 @@ function photoSrc(p){ return p.src || platePlaceholder(p.name); }
 
 /* ===================== LOBBY ===================== */
 const CATS = [
-  {id:"trivia", name:"טריוויה", desc:"כמה אתם מכירים את "+BRAND+"?", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
-  {id:"flavor", name:"גשר ושילובי טעמים", desc:"מנות אמיתיות מהתפריטים. מה מחבר ביניהן?", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
-  {id:"photo",  name:"פאזלים מתמונות", desc:"תמונות אמיתיות מערבים ב"+BRAND+".", ico:'<path d="M4 4h6v3a2 2 0 1 0 4 0V4h6v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/>'},
-  {id:"pairs",  name:"זוגות מהתפריט", desc:"מוצאים את אותה המנה פעמיים.", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
+  {id:"trivia", img:"img/carpaccio.jpg", name:"טריוויה", desc:"כמה אתם מכירים את "+BRAND+"?", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
+  {id:"flavor", img:"img/beet.jpg", name:"גשר ושילובי טעמים", desc:"מנות אמיתיות מהתפריטים. מה מחבר ביניהן?", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
+  {id:"photo", img:"img/pumpkin.jpg", name:"פאזלים מתמונות", desc:"תמונות אמיתיות מערבים ב"+BRAND+".", ico:'<path d="M4 4h6v3a2 2 0 1 0 4 0V4h6v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/>'},
+  {id:"pairs", img:"img/watermelon.jpg", name:"זוגות מהתפריט", desc:"מוצאים את אותה המנה פעמיים.", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
 ];
 const GAMES = [
   {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:CATS[0].ico},
@@ -41,10 +41,14 @@ function renderLobby(){
   curCat = null;
   $("gamelist").innerHTML = CATS.map(c=>{
     const n = GAMES.filter(g=>g.cat===c.id).length, done = GAMES.filter(g=>g.cat===c.id && S.done[g.id]).length;
-    return `<button class="game" data-c="${c.id}">
-      <span class="ico"><svg viewBox="0 0 24 24">${c.ico}</svg></span>
-      <span><h3>${c.name}</h3><p>${c.desc}</p></span>
-      <span class="meta"><span>${n} ${n===1?"משחק":"משחקים"}</span><span class="${done?'done':''}">${done? '★ '+catStars(c.id)+'/'+catMax(c.id) : '○ '+catMax(c.id)+' כוכבים'}</span></span>
+    const pct = Math.round(catStars(c.id)/catMax(c.id)*100);
+    return `<button class="tile" data-c="${c.id}" style="background-image:url('${c.img}')">
+      <span class="tile-ico"><svg viewBox="0 0 24 24">${c.ico}</svg></span>
+      <span class="tile-body">
+        <h3>${c.name}</h3>
+        <span class="tile-meta">${n} ${n===1?"משחק":"משחקים"} · <span class="${done?'done':''}">★ ${catStars(c.id)}/${catMax(c.id)}</span></span>
+        <span class="tile-bar"><i style="width:${pct}%"></i></span>
+      </span>
     </button>`;}).join("");
   $("gamelist").querySelectorAll("[data-c]").forEach(b=>b.addEventListener("click",()=>{ renderCat(b.dataset.c); show("category"); }));
 }
