@@ -26,6 +26,10 @@ check(D.WHEEL.length === 20 && Object.keys(D.PRIZES).every(k => D.PRIZES[k].slic
 check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לסדר ב-Make');
 const allText = fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + fs.readFileSync(path.join(ROOT, 'js/app.js'), 'utf8') + fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 check(!/שירנסקי(?!\s*מארח)(?![-\w])/.test(allText.replace(/shiranski/gi, '')), '"שירנסקי מארח" תמיד בשם המלא');
+const og = path.join(ROOT, 'img/og.jpg');
+check(fs.existsSync(og) && fs.statSync(og).size < 300 * 1024, 'תצוגה מקדימה לוואטסאפ: og.jpg קיים ומתחת ל-300KB');
+const head = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+check(/og:image" content="https:\/\/shiranskihosting\.github\.io\/shiranski-game\/img\/og\.jpg"/.test(head) && /og:title/.test(head) && /og:description/.test(head), 'תצוגה מקדימה לוואטסאפ: תגיות og במקום');
 for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', 'img/ui/pairs.svg']) check(fs.existsSync(path.join(ROOT, f)), 'איור קיים: ' + f);
 
 // ---------- 2. Playing the game in a phone-size browser ----------
