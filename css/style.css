@@ -126,3 +126,29 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .tile-meta .done{color:var(--gold);font-weight:700}
 .tile-bar{height:2px;width:60%;border-radius:2px;background:rgba(201,169,110,.18);overflow:hidden}
 .tile-bar i{display:block;height:100%;background:var(--gold)}
+
+/* true/false: timer + two big buttons */
+.timer{position:relative;height:28px;border-radius:999px;background:var(--card);border:1px solid var(--line);overflow:hidden}
+.timer i{position:absolute;inset:0 auto 0 0;width:100%;background:linear-gradient(90deg,var(--olive-deep),var(--gold));opacity:.55}
+.timer span{position:relative;display:grid;place-items:center;height:100%;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fg)}
+.tfrow{grid-template-columns:1fr 1fr}
+.tfbtn{text-align:center;font-size:19px;padding:18px 10px}
+
+/* odd one out: 2x2 ingredient chips */
+.oddgrid{grid-template-columns:1fr 1fr}
+.oddbtn{text-align:center;min-height:64px;display:grid;place-items:center}
+
+/* jigsaw: 3x3 board over a faint ghost of the photo */
+.jigwrap{position:relative;width:100%;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+.jghost{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.08;filter:grayscale(1)}
+.jboard{direction:ltr;position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
+.jp{background-size:300% 300%;background-repeat:no-repeat;border-radius:6px;border:0;transition:transform .15s,box-shadow .15s;padding:0}
+.jp.home{box-shadow:inset 0 0 0 2px rgba(201,169,110,.6)}
+.jp.sel{box-shadow:inset 0 0 0 3px var(--fg);transform:scale(.92)}
+.jboard.solved{gap:0;padding:0}
+.jboard.solved .jp{box-shadow:none;border-radius:0}
+
+/* big pairs table: 4 columns, smaller text */
+.memgrid.big{grid-template-columns:repeat(4,1fr);gap:8px}
+.memgrid.big .mem .f,.memgrid.big .mem .b{font-size:12px;padding:4px}
+.memgrid.big .mem .f svg{width:22px;height:22px}

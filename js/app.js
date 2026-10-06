@@ -1,9 +1,10 @@
 /* ===================== STATE ===================== */
 const KEY = "shiranski-game-v1";
-let S = {bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, done:{}};
-try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = s; }catch(e){}
+const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}});
+let S = FRESH();
+try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = Object.assign(FRESH(), s); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4};
+const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4, tf:10, odd:10, jigsaw:3, memory2:3};
 
 const $ = (id)=>document.getElementById(id);
 const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -35,13 +36,17 @@ const CATS = [
 ];
 const GAMES = [
   {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:CATS[0].ico},
+  {id:"tf",     cat:"trivia", name:"נכון או לא נכון", desc:"10 משפטים, 10 שניות לכל אחד. מהר!", time:"2 דק׳", ico:'<path d="M5 12l4 4 10-10"/>'},
   {id:"bridge", cat:"flavor", name:"הגשר", desc:"20 מנות אמיתיות מהתפריטים. מה הרכיב השלישי?", time:"4 דק׳", ico:CATS[1].ico},
+  {id:"odd",    cat:"flavor", name:"מה לא שייך?", desc:"4 רכיבים, אחד מהם לא היה בצלחת.", time:"3 דק׳", ico:'<circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="7" cy="17" r="3"/><path d="M14 14l6 6M20 14l-6 6"/>'},
   {id:"puzzle", cat:"photo", name:"תמונה ושם", desc:"מתאימים כל תמונה לשם המנה שלה.", time:"2 דק׳", ico:CATS[2].ico},
   {id:"zoom",   cat:"photo", name:"מה בצלחת?", desc:"תקריב שהולך ונפתח. מזהים את המנה?", time:"1 דק׳", ico:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5M11 8v6M8 11h6"/>'},
+  {id:"jigsaw", cat:"photo", name:"פאזל חלקים", desc:"מנה מפורקת ל-9 חלקים. מחזירים אותה לצלחת.", time:"3 דק׳", ico:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>'},
   {id:"memory", cat:"pairs", name:"זוגות מהתפריט", desc:"12 קלפים, 6 מנות. מוצאים כל מנה פעמיים.", time:"2 דק׳", ico:CATS[3].ico},
+  {id:"memory2", cat:"pairs", name:"זוגות מהתפריט: שולחן גדול", desc:"20 קלפים, 10 מנות. לאלופים.", time:"4 דק׳", ico:'<rect x="2" y="4" width="6" height="8" rx="1"/><rect x="9" y="4" width="6" height="8" rx="1"/><rect x="16" y="4" width="6" height="8" rx="1"/><rect x="5" y="13" width="6" height="8" rx="1"/><rect x="13" y="13" width="6" height="8" rx="1"/>'},
 ];
 let curCat = null;
-function totalStars(){ return S.bridge+S.trivia+S.memory+S.puzzle+S.zoom; }
+function totalStars(){ return Object.keys(MAX).reduce((a,k)=>a+(S[k]||0),0); }
 function totalMax(){ return Object.values(MAX).reduce((a,b)=>a+b,0); }
 function catStars(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+S[g.id],0); }
 function catMax(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+MAX[g.id],0); }
@@ -71,7 +76,7 @@ function renderCat(cid){
     </button>`).join("");
   $("c_list").querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.g)));
 }
-function backFromGame(){ if(curCat){ renderCat(curCat); show("category"); } else { renderLobby(); show("lobby"); } }
+function backFromGame(){ clearInterval(f && f.timer); if(curCat){ renderCat(curCat); show("category"); } else { renderLobby(); show("lobby"); } }
 $("finishBtn").addEventListener("click", renderResult);
 function start(id){
   if(id==="bridge") startBridge();
@@ -79,6 +84,10 @@ function start(id){
   if(id==="memory") startMemory();
   if(id==="puzzle") startPuzzle();
   if(id==="zoom")   startZoom();
+  if(id==="tf")     startTF();
+  if(id==="odd")    startOdd();
+  if(id==="jigsaw") startJigsaw();
+  if(id==="memory2") startMemory(true);
 }
 function glow(el){ el.classList.remove("glow"); void el.offsetWidth; el.classList.add("glow"); if(navigator.vibrate) try{navigator.vibrate(30);}catch(e){} }
 function setStars(prefix, n){ $(prefix+"_stars").textContent = n; }
@@ -130,10 +139,11 @@ function renderTrivia(){
 }
 
 /* ===================== MEMORY ===================== */
-let m = {open:[], matched:0, moves:0, lock:false};
-function startMemory(){
-  m = {open:[], matched:0, moves:0, lock:false};
-  PAIRS = shuffle(DISHES_MEM).slice(0,6).map(d=>[d,d]);
+let m = {open:[], matched:0, moves:0, lock:false, big:false};
+function startMemory(big){
+  m = {open:[], matched:0, moves:0, lock:false, big:!!big};
+  PAIRS = big ? shuffle(DISHES_MEM_BIG).slice(0,10).map(d=>[d,d]) : shuffle(DISHES_MEM).slice(0,6).map(d=>[d,d]);
+  $("m_grid").classList.toggle("big", m.big); $("m_title").textContent = big ? "זוגות מהתפריט: שולחן גדול" : "זוגות מהתפריט";
   const cards = shuffle(PAIRS.flatMap((p,i)=>[{t:p[0],k:i},{t:p[1],k:i}]));
   $("m_moves").textContent = 0; $("m_reveal").innerHTML = ""; setStars("m",0);
   $("m_grid").innerHTML = cards.map((c,i)=>`<button class="mem" data-k="${c.k}" data-i="${i}" aria-label="קלף"><span class="in"><span class="f"><svg viewBox="0 0 24 24"><path d="M12 3c3 4 5 6 5 9a5 5 0 0 1-10 0c0-3 2-5 5-9z"/></svg></span><span class="b">${c.t}</span></span></button>`).join("");
@@ -154,9 +164,10 @@ function flip(c){
   }
 }
 function finishMemory(){
-  const stars = m.moves<=9?3 : m.moves<=13?2 : 1;
-  S.memory = stars; S.done.memory = true; save(); setStars("m", stars);
-  $("m_reveal").innerHTML = `<div class="reveal"><b>${m.moves} ניסיונות, ${stars} כוכבים</b><p>שש מנות אמיתיות מהתפריטים של ${BRAND}. בפעם הבאה יהיו אחרות.</p></div><button class="btn primary" id="m_done">חזרה לקטגוריה</button>`;
+  const stars = m.big ? (m.moves<=17?3 : m.moves<=24?2 : 1) : (m.moves<=9?3 : m.moves<=13?2 : 1);
+  const key = m.big ? "memory2" : "memory";
+  S[key] = Math.max(S[key]||0, stars); S.done[key] = true; save(); setStars("m", stars);
+  $("m_reveal").innerHTML = `<div class="reveal"><b>${m.moves} ניסיונות, ${stars} כוכבים</b><p>${PAIRS.length} מנות אמיתיות מהתפריטים של ${BRAND}. בפעם הבאה יהיו אחרות.</p></div><button class="btn primary" id="m_done">חזרה לקטגוריה</button>`;
   $("m_done").addEventListener("click",backFromGame);
 }
 
@@ -230,6 +241,103 @@ function renderZoom(){
   }));
 }
 
+
+/* ===================== TRUE / FALSE (timed) ===================== */
+const TF_N = 10, TF_SEC = 10;
+let f = {i:0, score:0, set:[], timer:null, left:0};
+function startTF(){
+  clearInterval(f.timer);
+  f = {i:0, score:0, set:shuffle(TF).slice(0,TF_N), timer:null, left:0};
+  show("tf"); renderTF();
+}
+function renderTF(){
+  const r = f.set[f.i];
+  $("f_n").textContent = f.i+1; $("f_prog").style.width = (f.i/TF_N*100)+"%"; setStars("f", f.score);
+  $("f_q").textContent = r.s; $("f_reveal").innerHTML = "";
+  $("f_choices").innerHTML = `<button class="choice tfbtn" data-v="1">נכון</button><button class="choice tfbtn" data-v="0">לא נכון</button>`;
+  f.left = TF_SEC; $("f_time").style.transition="none"; $("f_time").style.width="100%"; void $("f_time").offsetWidth;
+  $("f_time").style.transition=`width ${TF_SEC}s linear`; $("f_time").style.width="0%";
+  $("f_sec").textContent = f.left;
+  clearInterval(f.timer);
+  f.timer = setInterval(()=>{ f.left--; $("f_sec").textContent = Math.max(0,f.left); if(f.left<=0) answerTF(null); },1000);
+  $("f_choices").querySelectorAll(".tfbtn").forEach(btn=>btn.addEventListener("click",()=>answerTF(btn)));
+}
+function answerTF(btn){
+  clearInterval(f.timer);
+  const r = f.set[f.i];
+  const tw = $("f_time"); tw.style.transition="none"; tw.style.width = getComputedStyle(tw).width;
+  const good = btn && (btn.dataset.v==="1")===r.t;
+  $("f_choices").querySelectorAll(".tfbtn").forEach(x=>{ x.disabled=true; if((x.dataset.v==="1")===r.t) x.classList.add("ok"); });
+  if(good){ f.score++; glow(btn); } else if(btn) btn.classList.add("bad");
+  setStars("f", f.score);
+  const last = f.i===TF_N-1;
+  $("f_reveal").innerHTML = `<div class="reveal"><b>${!btn?"נגמר הזמן.":good?"נכון!":"לא בדיוק."} ${r.t?"זה נכון.":"זה לא נכון."}</b><p>${r.why}</p></div><button class="btn primary" id="f_next">${last?"לסיום המשחק":"למשפט הבא"}</button>`;
+  $("f_next").addEventListener("click",()=>{ if(last){ S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); backFromGame(); } else { f.i++; renderTF(); } });
+}
+
+/* ===================== ODD ONE OUT ===================== */
+const ODD_N = 10;
+let o = {i:0, score:0, set:[]};
+function startOdd(){
+  o = {i:0, score:0, set:shuffle(BRIDGE).slice(0,ODD_N)};
+  show("odd"); renderOdd();
+}
+function renderOdd(){
+  const r = o.set[o.i];
+  const intruder = shuffle(r.opts.filter(x=>x!==r.ok))[0];
+  o.cur = {r, intruder};
+  $("o_n").textContent = o.i+1; $("o_prog").style.width=(o.i/ODD_N*100)+"%"; setStars("o", o.score);
+  $("o_q").textContent = "מנה מהתפריט: "+r.dish+". מה לא היה בצלחת?";
+  $("o_reveal").innerHTML="";
+  $("o_choices").innerHTML = shuffle([r.a, r.b, r.ok, intruder]).map(x=>`<button class="choice oddbtn">${x}</button>`).join("");
+  $("o_choices").querySelectorAll(".oddbtn").forEach(btn=>btn.addEventListener("click",()=>{
+    const good = btn.textContent===intruder;
+    $("o_choices").querySelectorAll(".oddbtn").forEach(x=>{ x.disabled=true; if(x.textContent===intruder) x.classList.add("bad"); else x.classList.add("ok"); });
+    if(good){ o.score++; glow(btn); }
+    setStars("o", o.score);
+    const last = o.i===ODD_N-1;
+    $("o_reveal").innerHTML = `<div class="reveal"><b>${good?"תפסת אותו.":"הזר היה: "+intruder+"."} בצלחת: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="o_next">${last?"לסיום המשחק":"למנה הבאה"}</button>`;
+    $("o_next").addEventListener("click",()=>{ if(last){ S.odd=Math.max(S.odd,o.score); S.done.odd=true; save(); backFromGame(); } else { o.i++; renderOdd(); } });
+  }));
+}
+
+/* ===================== JIGSAW (3x3 swap) ===================== */
+const JIG_ROUNDS = 3, JIG_PAR = 12;
+let j = {round:0, stars:0, photos:[], order:[], sel:null, swaps:0};
+function startJigsaw(){
+  j = {round:0, stars:0, photos:shuffle(PHOTOS).slice(0,JIG_ROUNDS), order:[], sel:null, swaps:0};
+  setStars("j",0); show("jigsaw"); renderJig();
+}
+function renderJig(){
+  const ph = j.photos[j.round];
+  do { j.order = shuffle([0,1,2,3,4,5,6,7,8]); } while(j.order.filter((v,i)=>v===i).length>2);
+  j.sel=null; j.swaps=0;
+  $("j_n").textContent = j.round+1; $("j_prog").style.width=(j.round/JIG_ROUNDS*100)+"%"; $("j_swaps").textContent=0;
+  $("j_reveal").innerHTML=""; $("j_ghost").style.backgroundImage=`url('${photoSrc(ph)}')`;
+  drawJig();
+}
+function drawJig(){
+  const ph = j.photos[j.round];
+  $("j_board").innerHTML = j.order.map((piece,pos)=>`<button class="jp${j.sel===pos?' sel':''}${piece===pos?' home':''}" data-pos="${pos}" aria-label="חלק" style="background-image:url('${photoSrc(ph)}');background-position:${(piece%3)*50}% ${Math.floor(piece/3)*50}%"></button>`).join("");
+  $("j_board").querySelectorAll(".jp").forEach(b=>b.addEventListener("click",()=>tapJig(+b.dataset.pos)));
+}
+function tapJig(pos){
+  if(j.done) return;
+  if(j.sel===null){ j.sel=pos; drawJig(); return; }
+  if(j.sel===pos){ j.sel=null; drawJig(); return; }
+  [j.order[j.sel], j.order[pos]] = [j.order[pos], j.order[j.sel]];
+  j.sel=null; j.swaps++; $("j_swaps").textContent=j.swaps; drawJig();
+  if(j.order.every((v,i)=>v===i)) finishJig();
+}
+function finishJig(){
+  const ph = j.photos[j.round]; j.done=true;
+  const won = j.swaps<=JIG_PAR; if(won) j.stars++; setStars("j", j.stars);
+  $("j_board").classList.add("solved"); glow($("j_board"));
+  const last = j.round===JIG_ROUNDS-1;
+  $("j_reveal").innerHTML = `<div class="reveal"><b>${ph.name} · ${j.swaps} החלפות${won?". כוכב!":""}</b><p>${ph.hint}.</p></div><button class="btn primary" id="j_next">${last?"לסיום המשחק":"לפאזל הבא"}</button>`;
+  $("j_next").addEventListener("click",()=>{ j.done=false; $("j_board").classList.remove("solved"); if(last){ S.jigsaw=Math.max(S.jigsaw,j.stars); S.done.jigsaw=true; save(); backFromGame(); } else { j.round++; renderJig(); } });
+}
+
 /* ===================== RESULT ===================== */
 function titleFor(score, max){
   const r = score/max;
@@ -250,7 +358,7 @@ function renderResult(){
   $("copyBtn").onclick = ()=>{ navigator.clipboard.writeText(text).then(()=>toast("הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); };
   show("result");
 }
-$("resetBtn").addEventListener("click",()=>{ S={bridge:0,trivia:0,memory:0,puzzle:0,zoom:0,done:{}}; save(); renderLobby(); show("lobby"); });
+$("resetBtn").addEventListener("click",()=>{ S=FRESH(); save(); renderLobby(); show("lobby"); });
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
 
 /* boot */
