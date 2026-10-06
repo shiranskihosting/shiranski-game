@@ -9,6 +9,28 @@ const PHOTOS = [
   {id:"watermelon", name:"אבטיח ופטה על לבנה",       hint:"אבטיח, פטה, זיתים ורוקט על לבנה. חומציות קרה של קיץ",                       src:"img/watermelon.jpg"},
   {id:"tuna",       name:"דג נא בסויה וצנון",        hint:"דג נא, סויה ושמן זית, צנונית, בצל ירוק, צ'ילי ושומשום. הים קודם",             src:"img/tuna.jpg"},
   {id:"croquette",  name:"קרוקט פריך על קרם אפונה",  hint:"קרוקט מטוגן על קרם אפונה ירוק, עם גבינה מפוררת",                            src:"img/croquette.jpg"},
+  // real dishes from the Drive photo catalog (מאגר תמונות שירנסקי)
+  {id:"salmon-cabbage", name:"סלמון כבוש בכרוב סגול", hint:"סלמון כבוש בכרוב סגול בצלחת קרמיקה ירוקה, שמיר ולחם", src:"img/salmon-cabbage.jpg"},
+  {id:"thai-noodles", name:"נודלס, שרימפס ובצל ירוק", hint:"נודלס תאילנדי בסלסלת במבוק, שרימפס, בייקון ובצל ירוק", src:"img/thai-noodles.jpg"},
+  {id:"roast-cabbage", name:"כרוב צלוי בבלסמי ונענע", hint:"כרוב צלוי ברוטב בלסמי ונענע, בצלחת קרמיקה תכלת בעבודת יד", src:"img/roast-cabbage.jpg"},
+  {id:"denis-pumpkin", name:"דניס צרוב ופירה דלעת", hint:"פילה דניס צרוב, פירה דלעת וטבולה סלק ורימונים", src:"img/denis-pumpkin.jpg"},
+  {id:"beef-tahini", name:"בקר צרוב על טחינה", hint:"פרוסות בקר צרוב על טחינה עם צ'יפס בטטה ושומשום שחור", src:"img/beef-tahini.jpg"},
+  {id:"tortellini-shrimp", name:"טורטליני ושרימפס בשמנת", hint:"טורטליני ביתי עם שרימפס ברוטב שמנת ומיקרו-ירוקים", src:"img/tortellini-shrimp.jpg"},
+  {id:"fig-crudo", name:"תאנים ודג נא על לבנה", hint:"סלט תאנים ומלפפון עם דג נא, עלים ולבנה בסומק", src:"img/fig-crudo.jpg"},
+  {id:"octopus", name:"סלט תמנון צלוי", hint:"סלט תמנון צלוי עם מלפפון, אבוקדו וקשיו", src:"img/octopus.jpg"},
+  {id:"beef-risotto", name:"בקר מפורק וריזוטו חלמון", hint:"בקר מפורק על תרד וריזוטו עם חלמון קונפי וחמאת זעפרן", src:"img/beef-risotto.jpg"},
+  {id:"salmon-grapefruit", name:"סלמון ואשכולית חרוכה", hint:"פילה סלמון עם אשכולית חרוכה ורוטב צלפים", src:"img/salmon-grapefruit.jpg"},
+  {id:"lamb-figs", name:"צלע טלה ותאנים צלויות", hint:"צלע טלה צרובה עם תאנים צלויות וריזוטו", src:"img/lamb-figs.jpg"},
+  {id:"fish-carpaccio", name:"קרפצ'יו דג, ענבים ופטה", hint:"קרפצ'יו דג עם חלפיניו, ענבים, גרעינים, פטה ושמן ירוק", src:"img/fish-carpaccio.jpg"},
+  {id:"udon", name:"מרק אודון ותירס צלוי", hint:"מרק אודון עם תירס צלוי, צנוניות ועשבי תיבול", src:"img/udon.jpg"},
+  {id:"saffron-shrimp", name:"שרימפס בחמאת זעפרן", hint:"שרימפס בחמאת זעפרן עם פרמזן ועשבים", src:"img/saffron-shrimp.jpg"},
+  {id:"ponzu-crudo", name:"דג נא בפונזו ותפוז חרוך", hint:"דג נא ברוטב פונזו עם תפוז חרוך ובצל ירוק", src:"img/ponzu-crudo.jpg"},
+  {id:"roast-veg", name:"ירקות צלויים על טחינה", hint:"שומר, קישוא וברוקוליני צלויים על טחינה ופפריקה", src:"img/roast-veg.jpg"},
+  {id:"vine-leaves", name:"עלי גפן על קרם אפונה", hint:"עלי גפן ממולאים על קרם אפונה עם יוגורט, שקדים וזרעים", src:"img/vine-leaves.jpg"},
+  {id:"pulled-beef", name:"בשר מפורק ופירה דלעת", hint:"בשר מפורק עם תירס צלוי, שעועית ירוקה ופירה דלעת", src:"img/pulled-beef.jpg"},
+  {id:"beef-carpaccio-figs", name:"קרפצ'יו בקר ותאנים", hint:"קרפצ'יו בקר עם בצל מקורמל, תאנים ורוקט", src:"img/beef-carpaccio-figs.jpg"},
+  {id:"cheesecake", name:"עוגת גבינה מקורמלת", hint:"קינוח עוגת גבינה מקורמלת על רוטב אוכמניות", src:"img/cheesecake.jpg"},
+  {id:"mussels-shrimp", name:"מולים ושרימפס", hint:"מולים ושרימפס עם בצל מקורמל, פטרוזיליה ושבבי פרמזן", src:"img/mussels-shrimp.jpg"},
 ];
 
 // --- הגשר: two ingredients, pick the third. All from the flavor DNA.
