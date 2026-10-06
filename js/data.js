@@ -177,7 +177,7 @@ const PRIZES = {
 const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
 const WHEEL_PCT = 0.9;   // share of all stars needed to unlock the wheel
 const TALLY_URL = "https://tally.so/r/EkRN1A";
-const PRIZE_TERMS = "המתנה לאדם אחד בלבד ולהזמנה של אירוע אחד בלבד. אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
+const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
 const CODE_ABC = "ACDEFGHJKLMNPQRTUVWXY3479";
 function codeCheck(body){ let h=17; for(let i=0;i<body.length;i++) h=(h*31 + body.charCodeAt(i)*(i+7)) % 9973; return CODE_ABC[h % CODE_ABC.length]; }
 function makeCode(letter){ let r=""; for(let i=0;i<3;i++) r+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; const body=letter+r; return "SH-"+body+"-"+codeCheck(body); }
