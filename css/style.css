@@ -111,18 +111,18 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .glow{animation:glow .7s ease-out}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-/* main menu tiles: 2x2 squares, real dish photo behind each category */
-.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.tile{position:relative;aspect-ratio:1;border-radius:18px;overflow:hidden;text-align:right;display:flex;flex-direction:column;justify-content:space-between;padding:12px;
-  background-color:var(--card);background-position:center;background-size:cover;background-repeat:no-repeat;border:1px solid var(--line);isolation:isolate;transition:transform .15s,border-color .2s}
-.tile::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(20,18,16,.15) 0%,rgba(20,18,16,.35) 40%,rgba(20,18,16,.92) 100%)}
-.tile:hover{border-color:var(--gold)}
+/* main menu tiles: chef's menu card. Dark card, double gold rule, gold line illustration */
+.tiles{margin-bottom:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{position:relative;aspect-ratio:5/6;min-height:0;overflow:hidden;border-radius:18px;background:var(--card);border:1px solid rgba(201,169,110,.38);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;padding:16px 12px 14px;text-align:center;transition:transform .15s,border-color .2s,background .2s}
+.tile::after{content:"";position:absolute;inset:6px;border:1px solid rgba(201,169,110,.16);border-radius:13px;pointer-events:none}
+.tile:hover{border-color:var(--gold);background:#24201C}
 .tile:active{transform:scale(.97)}
-.tile-ico{align-self:flex-start;width:38px;height:38px;border-radius:12px;background:rgba(20,18,16,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;border:1px solid rgba(244,238,227,.15)}
-.tile-ico svg{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.tile-body{display:grid;gap:4px}
-.tile h3{margin:0;font-family:var(--display);font-size:19px;line-height:1.15;font-weight:700;text-wrap:balance;text-shadow:0 1px 8px rgba(0,0,0,.6)}
-.tile-meta{font-size:12.5px;color:#E3DACB}
+.tile .ill{flex:1 1 0;min-height:0;width:100%;color:var(--gold);transition:transform .3s}
+.tile:hover .ill{transform:translateY(-3px)}
+.tile-body{display:grid;gap:4px;justify-items:center;width:100%;position:relative}
+.tile h3{margin:0;font-family:var(--display);font-size:17px;line-height:1.15;font-weight:700;text-wrap:balance}
+.tile-meta{font-size:12.5px;color:var(--olive)}
 .tile-meta .done{color:var(--gold);font-weight:700}
-.tile-bar{height:3px;border-radius:3px;background:rgba(244,238,227,.2);overflow:hidden}
+.tile-bar{height:2px;width:60%;border-radius:2px;background:rgba(201,169,110,.18);overflow:hidden}
 .tile-bar i{display:block;height:100%;background:var(--gold)}

@@ -19,11 +19,19 @@ function platePlaceholder(name){
 function photoSrc(p){ return p.src || platePlaceholder(p.name); }
 
 /* ===================== LOBBY ===================== */
+// line illustrations for the main menu tiles (gold line on dark card; to be replaced by Canva art)
+const ILL = {
+ trivia:`<path d="M22 82 Q22 38 60 38 Q98 38 98 82 Z"/><path d="M12 88 H108"/><circle cx="60" cy="31" r="5"/><path d="M52 58 q0-9 8-9 q9 0 9 8 q0 6-7 8 q-2 1-2 5"/><circle cx="60" cy="75" r=".8" fill="currentColor"/><path d="M30 96 q30 8 60 0" opacity=".5"/>`,
+ flavor:`<path d="M14 82 Q60 30 106 82"/><path d="M26 82 v14 M94 82 v14 M60 56 v40" opacity=".5"/><circle cx="22" cy="70" r="11"/><path d="M22 59 v22 M11 70 h22 M14 62 l16 16 M30 62 l-16 16" opacity=".6"/><path d="M60 46 c-10-8-4-22 0-26 c4 4 10 18 0 26z"/><path d="M60 46 v-22" opacity=".6"/><path d="M92 74 c-4-12 2-20 6-22 c4 2 10 10 6 22 c-3 6-9 6-12 0z"/><path d="M98 52 q2-6 6-7"/>`,
+ photo:`<circle cx="60" cy="62" r="34"/><circle cx="60" cy="62" r="24" opacity=".5"/><path d="M60 28 v14 q-6 0-6 6 q0 6 6 6 v16 M26 62 h16 q0-6 6-6 q6 0 6 6 h40" /><path d="M14 30 v48 M10 30 v12 q0 6 4 6 q4 0 4-6 v-12" /><path d="M106 30 q-8 10 0 26 v22"/>`,
+ pairs:`<rect x="18" y="24" width="44" height="62" rx="7" transform="rotate(-8 40 55)"/><rect x="58" y="30" width="44" height="62" rx="7" transform="rotate(7 80 61)"/><circle cx="40" cy="55" r="11" transform="rotate(-8 40 55)"/><circle cx="80" cy="61" r="11"/><path d="M36 54 q4-5 8 0 M76 60 q4-5 8 0" opacity=".6"/>`
+};
+const illSvg = k => `<svg class="ill" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ILL[k]}</svg>`;
 const CATS = [
-  {id:"trivia", img:"img/carpaccio.jpg", name:"טריוויה", desc:"כמה אתם מכירים את "+BRAND+"?", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
-  {id:"flavor", img:"img/beet.jpg", name:"גשר ושילובי טעמים", desc:"מנות אמיתיות מהתפריטים. מה מחבר ביניהן?", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
-  {id:"photo", img:"img/pumpkin.jpg", name:"פאזלים מתמונות", desc:"תמונות אמיתיות מערבים ב"+BRAND+".", ico:'<path d="M4 4h6v3a2 2 0 1 0 4 0V4h6v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/>'},
-  {id:"pairs", img:"img/watermelon.jpg", name:"זוגות מהתפריט", desc:"מוצאים את אותה המנה פעמיים.", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
+  {id:"trivia", name:"טריוויה", desc:"כמה אתם מכירים את "+BRAND+"?", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
+  {id:"flavor", name:"גשר ושילובי טעמים", desc:"מנות אמיתיות מהתפריטים. מה מחבר ביניהן?", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
+  {id:"photo", name:"פאזלים מתמונות", desc:"תמונות אמיתיות מערבים ב"+BRAND+".", ico:'<path d="M4 4h6v3a2 2 0 1 0 4 0V4h6v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/>'},
+  {id:"pairs", name:"זוגות מהתפריט", desc:"מוצאים את אותה המנה פעמיים.", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
 ];
 const GAMES = [
   {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:CATS[0].ico},
@@ -42,8 +50,8 @@ function renderLobby(){
   $("gamelist").innerHTML = CATS.map(c=>{
     const n = GAMES.filter(g=>g.cat===c.id).length, done = GAMES.filter(g=>g.cat===c.id && S.done[g.id]).length;
     const pct = Math.round(catStars(c.id)/catMax(c.id)*100);
-    return `<button class="tile" data-c="${c.id}" style="background-image:url('${c.img}')">
-      <span class="tile-ico"><svg viewBox="0 0 24 24">${c.ico}</svg></span>
+    return `<button class="tile" data-c="${c.id}">
+      ${illSvg(c.id)}
       <span class="tile-body">
         <h3>${c.name}</h3>
         <span class="tile-meta">${n} ${n===1?"משחק":"משחקים"} · <span class="${done?'done':''}">★ ${catStars(c.id)}/${catMax(c.id)}</span></span>
