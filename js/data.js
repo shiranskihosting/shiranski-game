@@ -175,7 +175,6 @@ const PRIZES = {
 };
 // order around the wheel, spread so equal prizes don't touch
 const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
-const WHEEL_PCT = 0.9;   // share of all stars needed to unlock the wheel
 const TALLY_URL = "https://tally.so/r/EkRN1A";
 const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
 // The prize is drawn by Make (not in the browser) and every code is logged in Shiran's private sheet.

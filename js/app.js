@@ -44,16 +44,17 @@ function totalStars(){ return Object.keys(MAX).reduce((a,k)=>a+(S[k]||0),0); }
 function totalMax(){ return Object.values(MAX).reduce((a,b)=>a+b,0); }
 function catStars(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+S[g.id],0); }
 function catMax(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+MAX[g.id],0); }
-function wheelNeed(){ return Math.ceil(totalMax()*WHEEL_PCT); }
-function wheelOpen(){ return GAMES.every(g=>S.done[g.id]) && totalStars()>=wheelNeed(); }
+// Everyone who finishes all the games gets to spin (no score threshold).
+function gamesLeft(){ return GAMES.filter(g=>!S.done[g.id]).length; }
+function wheelOpen(){ return gamesLeft()===0; }
 function renderPromo(){
-  const need = wheelNeed(), have = totalStars();
-  $("promo_bar").style.width = Math.min(100, have/need*100)+"%";
+  const n = GAMES.length, d = n - gamesLeft();
+  $("promo_bar").style.width = (d/n*100)+"%";
   $("promo_line").textContent = S.prize ? "זכית: "+PRIZES[S.prize.k].label+" · קוד "+S.prize.code
-    : wheelOpen() ? "הגלגל פתוח! לחצו כאן כדי לסובב."
-    : `אוספים ${need} מתוך ${totalMax()} כוכבים (90%) בכל המשחקים, ומסובבים את גלגל המזל. כרגע: ${have}.`;
+    : wheelOpen() ? "סיימת את כל המשחקים! לחצו כאן כדי לסובב את גלגל המזל."
+    : `מסיימים את כל ${n} המשחקים ומסובבים את גלגל המזל. סיימת ${d} מתוך ${n}.`;
 }
-$("promo").addEventListener("click",e=>{ e.preventDefault(); if(S.prize || wheelOpen()){ openWheel(); } else { toast("עוד "+Math.max(0,wheelNeed()-totalStars())+" כוכבים לגלגל"); } });
+$("promo").addEventListener("click",e=>{ e.preventDefault(); if(S.prize || wheelOpen()){ openWheel(); } else { toast(gamesLeft()===1 ? "עוד משחק אחד לגלגל המזל" : "עוד "+gamesLeft()+" משחקים לגלגל המזל"); } });
 $("bookBtn").href = TALLY_URL; $("lobby_terms").textContent = "פרסי גלגל המזל: "+PRIZE_TERMS;
 function renderLobby(){
   curCat = null; renderPromo();
@@ -430,10 +431,10 @@ function renderResult(){
   $("r_title").textContent = title; $("r_score").textContent = score; $("r_max").textContent = max;
   const played = GAMES.filter(g=>S.done[g.id]).length;
   $("r_line").textContent = played===0 ? "עוד לא שיחקת. הכוכבים מחכים בתפריט הראשי." : played<GAMES.length ? `שיחקת ${played} מתוך ${GAMES.length} משחקים. אפשר להמשיך לאסוף.` : "שיחקת בכל המשחקים.";
-  const need = wheelNeed();
+  const left = gamesLeft();
   $("r_wheel").innerHTML = S.prize ? `<button class="btn gold" id="r_spin">לראות את הפרס שלי</button>`
-    : wheelOpen() ? `<div class="reveal"><b>הגעת ל-90%! גלגל המזל פתוח בשבילך.</b></div><button class="btn gold" id="r_spin">לסובב את גלגל המזל</button>`
-    : `<p class="note">עוד ${Math.max(0,need-score)} כוכבים${GAMES.every(g=>S.done[g.id])?"":" ומשחק בכל המשחקים"} כדי לפתוח את גלגל המזל.</p>`;
+    : wheelOpen() ? `<div class="reveal"><b>סיימת את כל המשחקים! גלגל המזל פתוח בשבילך.</b></div><button class="btn gold" id="r_spin">לסובב את גלגל המזל</button>`
+    : `<p class="note">${left===1?"עוד משחק אחד":"עוד "+left+" משחקים"} ומסובבים את גלגל המזל.</p>`;
   if($("r_spin")) $("r_spin").addEventListener("click", openWheel);
   if(!S.prize && wheelOpen()){ SFX.fanfare(); fireworks(2600); }
   $("r_tags").innerHTML = CATS.map(c=>{ const d=GAMES.some(g=>g.cat===c.id&&S.done[g.id]); return `<span class="tag ${d?'on':''}">${c.name} ${d?'★'+catStars(c.id):''}</span>`; }).join("");

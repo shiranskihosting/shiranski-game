@@ -89,9 +89,14 @@ for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', '
   await play('pairs', 'memory2', async () => check(await pairs() === 20, 'שולחן גדול: 20 קלפים'));
 
   console.log('גלגל המזל');
-  await page.evaluate(() => { for (const g of GAMES) { S[g.id] = MAX[g.id]; S.done[g.id] = true; } save(); renderLobby(); });
+  await page.evaluate(() => { localStorage.clear(); S = FRESH(); for (const g of GAMES.slice(1)) S.done[g.id] = true; save(); renderLobby(); });
   await page.click('#finishBtn');
-  check(await page.locator('#r_spin').count() === 1, 'מסך תוצאה: 90% פותח את הגלגל');
+  check(await page.locator('#r_spin').count() === 0, 'מסך תוצאה: לפני שמסיימים את כל המשחקים הגלגל סגור');
+  await page.click('#result [data-back]');
+  await page.evaluate(() => { for (const g of GAMES) S.done[g.id] = true; save(); renderLobby(); });
+  check((await page.textContent('#promo')).includes('שחקו כדי לקבל ממני מתנה'), 'פרומו: "שחקו כדי לקבל ממני מתנה!"');
+  await page.click('#finishBtn');
+  check(await page.locator('#r_spin').count() === 1, 'מסך תוצאה: מי שסיים את כל המשחקים מקבל את הגלגל, בלי קשר לניקוד');
   await page.click('#r_spin');
   await page.click('#w_spin');
   check(await page.evaluate(() => S.prize) === null, 'גלגל: אי אפשר לסובב בלי שם וטלפון');
