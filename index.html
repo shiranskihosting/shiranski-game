@@ -22,10 +22,16 @@
       <h1>המטבח של שירנסקי מארח</h1>
       <p class="lede">ארבעה עולמות של משחקים קצרים: טריוויה, טעמים, תמונות וזוגות. אוספים כוכבים, ובסוף מקבלים תואר.</p>
     </header>
+    <a class="promo" id="promo" href="#" aria-label="פרטים על גלגל המזל">
+      <svg class="promo-ico" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="26" r="17"/><path d="M24 9v34M7 26h34M12 14l24 24M36 14L12 38" opacity=".45"/><circle cx="24" cy="26" r="3.5" fill="currentColor"/><path d="M20 4h8l-4 6z" fill="currentColor"/></svg>
+      <span class="promo-txt"><b>שחקו ותזכו בפרס לארוחה הבאה שלכם</b><span id="promo_line">מגיעים ל-90% מהכוכבים ומסובבים את גלגל המזל.</span><span class="promo-bar"><i id="promo_bar"></i></span></span>
+    </a>
     <div class="tiles" id="gamelist"></div>
     <div class="finish">
       <button class="btn gold" id="finishBtn">לתוצאה ולשיתוף</button>
+      <a class="btn ghost" id="bookBtn" href="#" target="_blank" rel="noopener">להזמנת מקום בשירנסקי מארח</a>
       <p class="note">אפשר לשחק בכל סדר. כוכבים נשמרים בטלפון הזה.</p>
+      <p class="terms" id="lobby_terms"></p>
     </div>
   </section>
 
@@ -140,6 +146,22 @@
     </div>
   </section>
 
+  <!-- WHEEL OF FORTUNE -->
+  <section class="screen" id="wheel" hidden>
+    <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>תפריט ראשי</button></div>
+    <div class="stage wheelstage">
+      <span class="eyebrow" style="text-align:center">גלגל המזל של שירנסקי מארח</span>
+      <h2 class="prompt" style="text-align:center" id="w_head">סיבוב אחד, פרס אחד. בהצלחה!</h2>
+      <div class="wheelwrap">
+        <svg class="pointer" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 38L6 6h28z"/></svg>
+        <div class="wheel" id="w_wheel"></div>
+        <button class="hub" id="w_spin">לסובב</button>
+      </div>
+      <div id="w_reveal" style="display:grid;gap:10px"></div>
+      <p class="terms" id="w_terms"></p>
+    </div>
+  </section>
+
   <!-- RESULT -->
   <section class="screen" id="result" hidden>
     <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>תפריט ראשי</button></div>
@@ -151,6 +173,7 @@
       <div class="card">
         <div class="tags" id="r_tags"></div>
       </div>
+      <div id="r_wheel"></div>
       <div class="actions">
         <a class="btn gold" id="shareBtn" href="#" target="_blank" rel="noopener">לשתף את התוצאה בוואטסאפ</a>
         <a class="btn primary" href="https://wa.me/972544714766?text=%D7%94%D7%99%D7%99%20%D7%A9%D7%99%D7%A8%D7%9F%2C%20%D7%A9%D7%99%D7%97%D7%A7%D7%AA%D7%99%20%D7%91%D7%9E%D7%A9%D7%97%D7%A7%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%A2%D7%A8%D7%91%20%D7%91%D7%A9%D7%99%D7%A8%D7%A0%D7%A1%D7%A7%D7%99%20%D7%9E%D7%90%D7%A8%D7%97" target="_blank" rel="noopener">להזמין ערב בשירנסקי מארח</a>

@@ -152,3 +152,28 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .memgrid.big{grid-template-columns:repeat(4,1fr);gap:8px}
 .memgrid.big .mem .f,.memgrid.big .mem .b{font-size:12px;padding:4px}
 .memgrid.big .mem .f svg{width:22px;height:22px}
+
+/* promo banner on the main menu */
+.promo{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;text-decoration:none;color:var(--fg);
+  background:linear-gradient(135deg,rgba(201,169,110,.20),rgba(201,169,110,.06));border:1px solid rgba(201,169,110,.45)}
+.promo-ico{flex:none;width:42px;height:42px;color:var(--gold);animation:spinslow 14s linear infinite}
+@keyframes spinslow{to{transform:rotate(360deg)}}
+.promo-txt{display:grid;gap:3px;min-width:0}
+.promo-txt b{font-family:var(--display);font-size:16px;color:var(--gold);line-height:1.2}
+.promo-txt span{font-size:13px;color:var(--muted)}
+.promo-bar{height:3px;border-radius:3px;background:rgba(201,169,110,.18);overflow:hidden;margin-top:2px}
+.promo-bar i{display:block;height:100%;width:0;background:var(--gold)}
+
+/* wheel */
+.wheelstage{align-items:stretch}
+.wheelwrap{position:relative;width:min(100%,340px);aspect-ratio:1;margin:6px auto 0}
+.wheel{width:100%;height:100%;border-radius:50%;box-shadow:0 18px 50px rgba(0,0,0,.55);will-change:transform}
+.wheel svg{display:block;width:100%;height:100%}
+.pointer{position:absolute;top:-8px;left:50%;width:34px;height:34px;transform:translateX(-50%);z-index:2;fill:var(--gold);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.hub{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:var(--gold);color:#1A1912;font-weight:700;font-size:17px;
+  box-shadow:0 0 0 6px var(--bg),0 0 0 7px rgba(201,169,110,.5),0 6px 18px rgba(0,0,0,.5)}
+.hub[disabled]{background:var(--card2);color:var(--muted);cursor:default}
+.prize{text-align:center;justify-items:center}
+.prize-name{font-size:24px}
+.prize-code{font-family:ui-monospace,Menlo,monospace;font-size:22px;letter-spacing:.12em;direction:ltr;background:var(--bg);border:1px dashed var(--gold);border-radius:10px;padding:6px 14px;color:var(--fg)}
+.terms{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 0;line-height:1.5}

@@ -162,3 +162,22 @@ const TF = [
 
 // --- זוגות מהתפריט, גרסה גדולה: more real dishes (from served menus)
 const DISHES_MEM_BIG = DISHES_MEM.concat(["חציל שחור וטחינה","סלמון בזיגוג מיסו","ארנצ'יני בשר","בורטה ועגבניות","דלעת זהובה ופטה"]);
+
+// --- גלגל המזל. Equal slices; a prize appears on the wheel as many times as its share (20 slices).
+// The 2nd character of the code tells Shiran which prize it is (see verify.html).
+const PRIZES = {
+  K:{label:"5% הנחה",               short:"5%",          slices:6},
+  M:{label:"10% הנחה",              short:"10%",         slices:5},
+  R:{label:"15% הנחה",              short:"15%",         slices:4},
+  T:{label:"20% הנחה",              short:"20%",         slices:2},
+  V:{label:"ארוחה ל-3 במחיר של 2",   short:"3 במחיר 2",   slices:2},
+  Z:{label:"ארוחה ל-4 במחיר זוגי",   short:"4 במחיר זוגי", slices:1},
+};
+// order around the wheel, spread so equal prizes don't touch
+const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
+const WHEEL_PCT = 0.9;   // share of all stars needed to unlock the wheel
+const TALLY_URL = "https://tally.so/r/EkRN1A";
+const PRIZE_TERMS = "המתנה לאדם אחד בלבד ולהזמנה של אירוע אחד בלבד. אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
+const CODE_ABC = "ACDEFGHJKLMNPQRTUVWXY3479";
+function codeCheck(body){ let h=17; for(let i=0;i<body.length;i++) h=(h*31 + body.charCodeAt(i)*(i+7)) % 9973; return CODE_ABC[h % CODE_ABC.length]; }
+function makeCode(letter){ let r=""; for(let i=0;i<3;i++) r+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; const body=letter+r; return "SH-"+body+"-"+codeCheck(body); }
