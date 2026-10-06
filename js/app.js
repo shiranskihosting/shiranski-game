@@ -372,29 +372,43 @@ function drawWheel(){
 function openWheel(){
   drawWheel(); $("w_terms").textContent = PRIZE_TERMS; $("w_reveal").innerHTML = "";
   const w = $("w_wheel"); w.style.transition = "none";
+  $("w_form").hidden = !!S.prize;
   if(S.prize){ w.style.transform = `rotate(${-S.prize.slot*360/WHEEL.length}deg)`; $("w_spin").disabled = true; $("w_head").textContent = "כבר סובבת. זה הפרס שלך:"; showPrize(); }
   else { w.style.transform = "rotate(0deg)"; $("w_spin").disabled = false; $("w_head").textContent = "סיבוב אחד, פרס אחד. בהצלחה!"; }
   show("wheel");
 }
-$("w_spin").addEventListener("click",()=>{
+$("w_spin").addEventListener("click", spin);
+async function spin(){
   if(spinning || S.prize || !wheelOpen()) return;
-  spinning = true; $("w_spin").disabled = true;
-  const n = WHEEL.length, slot = Math.floor(Math.random()*n);          // every slice equally likely
-  const jitter = (Math.random()-.5) * (360/n) * 0.7;
-  const deg = 360*6 - slot*360/n + jitter;
-  const w = $("w_wheel"); w.style.transition = "transform 5.2s cubic-bezier(.12,.62,.08,1)"; w.style.transform = `rotate(${deg}deg)`;
+  const name = $("w_name").value.trim(), phone = $("w_phone").value.replace(/[^\d+]/g,"");
+  if(name.length<2 || phone.replace(/\D/g,"").length<9){ toast("צריך שם וטלפון כדי לסובב"); (name.length<2?$("w_name"):$("w_phone")).focus(); return; }
+  spinning = true; $("w_spin").disabled = true; $("w_spin").textContent = "...";
+  const w = $("w_wheel"); w.classList.add("waiting");
+  let res = null;
+  try{
+    const ctrl = new AbortController(); const tm = setTimeout(()=>ctrl.abort(), 20000);
+    const r = await fetch(SPIN_URL+"?name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone), {signal:ctrl.signal});
+    clearTimeout(tm); res = await r.json();
+    if(!(res && Number.isInteger(res.slot) && WHEEL[res.slot]===res.k && /^SH-[0-9A-F]{6}$/.test(res.code))) res = null;
+  }catch(e){ res = null; }
+  w.classList.remove("waiting");
+  if(!res){ spinning=false; $("w_spin").disabled=false; $("w_spin").textContent="לסובב"; toast("לא הצלחנו להגריל כרגע. נסו שוב בעוד רגע."); return; }
+  const n = WHEEL.length, jitter = (Math.random()-.5) * (360/n) * 0.7;
+  const deg = 360*6 - res.slot*360/n + jitter;
+  w.style.transition = "none"; w.style.transform = "rotate(0deg)"; void w.offsetWidth;
+  w.style.transition = "transform 5.2s cubic-bezier(.12,.62,.08,1)"; w.style.transform = `rotate(${deg}deg)`;
   setTimeout(()=>{
-    const k = WHEEL[slot];
-    S.prize = {k, slot, code:makeCode(k), at:new Date().toISOString().slice(0,10)}; save();
-    spinning = false; $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild);
+    S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save();
+    spinning = false; $("w_spin").textContent = "לסובב"; $("w_form").hidden = true;
+    $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild);
   }, 5400);
-});
+}
 function showPrize(){
   const P = PRIZES[S.prize.k];
-  const msg = `היי שירן, זכיתי בגלגל המזל של ${BRAND}!\nהפרס: ${P.label}\nהקוד: ${S.prize.code}\nאשמח לתאם ערב.`;
-  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span><p>שמרו את הקוד והציגו אותו בהזמנה.</p></div>
-    <a class="btn gold" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>
-    <a class="btn primary" href="https://wa.me/972544714766?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">לשלוח את הקוד לשירן בוואטסאפ</a>`;
+  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span><p>כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות.</p></div>
+    <button class="btn ghost" id="w_copy">להעתיק את הקוד</button>
+    <a class="btn gold" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
+  $("w_copy").addEventListener("click",()=>{ navigator.clipboard.writeText(S.prize.code).then(()=>toast("הקוד הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); });
 }
 
 /* ===================== RESULT ===================== */

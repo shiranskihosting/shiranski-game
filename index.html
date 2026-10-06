@@ -157,6 +157,12 @@
         <div class="wheel" id="w_wheel"></div>
         <button class="hub" id="w_spin">לסובב</button>
       </div>
+      <form class="claim" id="w_form" autocomplete="on">
+        <p class="sub" style="text-align:center">לפני הסיבוב: למי נרשום את הפרס?</p>
+        <input id="w_name" name="name" placeholder="שם מלא" required autocomplete="name">
+        <input id="w_phone" name="tel" type="tel" inputmode="tel" placeholder="טלפון" required autocomplete="tel" dir="ltr">
+        <p class="terms">הפרס נרשם על שמכם ועל הטלפון שלכם, ונשמר אצל שירנסקי מארח רק לצורך מימוש הפרס.</p>
+      </form>
       <div id="w_reveal" style="display:grid;gap:10px"></div>
       <p class="terms" id="w_terms"></p>
     </div>

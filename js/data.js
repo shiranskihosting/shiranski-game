@@ -164,7 +164,7 @@ const TF = [
 const DISHES_MEM_BIG = DISHES_MEM.concat(["חציל שחור וטחינה","סלמון בזיגוג מיסו","ארנצ'יני בשר","בורטה ועגבניות","דלעת זהובה ופטה"]);
 
 // --- גלגל המזל. Equal slices; a prize appears on the wheel as many times as its share (20 slices).
-// The 2nd character of the code tells Shiran which prize it is (see verify.html).
+// Same order is used by the Make scenario that draws the prize.
 const PRIZES = {
   K:{label:"5% הנחה",               short:"5%",          slices:6},
   M:{label:"10% הנחה",              short:"10%",         slices:5},
@@ -178,6 +178,5 @@ const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","
 const WHEEL_PCT = 0.9;   // share of all stars needed to unlock the wheel
 const TALLY_URL = "https://tally.so/r/EkRN1A";
 const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
-const CODE_ABC = "ACDEFGHJKLMNPQRTUVWXY3479";
-function codeCheck(body){ let h=17; for(let i=0;i<body.length;i++) h=(h*31 + body.charCodeAt(i)*(i+7)) % 9973; return CODE_ABC[h % CODE_ABC.length]; }
-function makeCode(letter){ let r=""; for(let i=0;i<3;i++) r+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; const body=letter+r; return "SH-"+body+"-"+codeCheck(body); }
+// The prize is drawn by Make (not in the browser) and every code is logged in Shiran's private sheet.
+const SPIN_URL = "https://hook.eu1.make.com/i1bwo3cdw4nvplh1rn8atd1nfw4pb85g";
