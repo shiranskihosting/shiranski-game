@@ -352,12 +352,12 @@ function drawWheel(){
   WHEEL.forEach((k,i)=>{
     const a0 = -Math.PI/2 - a/2 + i*a, a1 = a0 + a;
     const x0 = cx+R*Math.cos(a0), y0 = cy+R*Math.sin(a0), x1 = cx+R*Math.cos(a1), y1 = cy+R*Math.sin(a1);
-    const fill = k==="Z" ? "#C9A96E" : (i%2 ? "#1F1C19" : "#2A2621");
-    const ink = k==="Z" ? "#1A1912" : "#F4EEE3";
+    const fill = PRIZES[k].fill || (i%2 ? "#1F1C19" : "#2A2621");
+    const ink = PRIZES[k].ink || "#F4EEE3";
     const mid = a0 + a/2, deg = mid*180/Math.PI;
     const tx = cx+R*0.62*Math.cos(mid), ty = cy+R*0.62*Math.sin(mid);
     svg += `<path d="M${cx} ${cy}L${x0.toFixed(2)} ${y0.toFixed(2)}A${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z" fill="${fill}" stroke="rgba(201,169,110,.55)" stroke-width="1"/>`;
-    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${ink}" font-size="${PRIZES[k].short.length>5?9.5:13}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(deg+(Math.cos(mid)<0?180:0)).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" font-family="Assistant, sans-serif">${PRIZES[k].short}</text>`;
+    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${ink}" font-size="${PRIZES[k].short.length>12?8.6:PRIZES[k].short.length>5?9.5:13}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(deg+(Math.cos(mid)<0?180:0)).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" font-family="Assistant, sans-serif">${PRIZES[k].short}</text>`;
   });
   svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#C9A96E" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="${R+6}" fill="none" stroke="rgba(201,169,110,.25)" stroke-width="1"/>`;
   for(let i=0;i<n;i++){ const t=-Math.PI/2 - a/2 + i*a; svg+=`<circle cx="${(cx+(R+6)*Math.cos(t)).toFixed(1)}" cy="${(cy+(R+6)*Math.sin(t)).toFixed(1)}" r="2.2" fill="#C9A96E"/>`; }

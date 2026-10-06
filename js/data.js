@@ -170,8 +170,8 @@ const PRIZES = {
   M:{label:"10% הנחה",              short:"10%",         slices:5},
   R:{label:"15% הנחה",              short:"15%",         slices:4},
   T:{label:"20% הנחה",              short:"20%",         slices:2},
-  V:{label:"ארוחה ל-3 במחיר של 2",   short:"3 במחיר 2",   slices:2},
-  Z:{label:"ארוחה ל-4 במחיר זוגי",   short:"4 במחיר זוגי", slices:1},
+  V:{label:"ארוחה ל-3 במחיר של 2",   short:"3 במחיר 2",   slices:2, fill:"#C9A96E", ink:"#1A1912"},
+  Z:{label:"2 זוגות במחיר של זוג",   short:"2 זוגות במחיר זוג", slices:1, fill:"#93392F", ink:"#F4EEE3"},
 };
 // order around the wheel, spread so equal prizes don't touch
 const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
