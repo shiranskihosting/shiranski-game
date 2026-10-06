@@ -9,7 +9,7 @@ const PHOTOS = [
   {id:"watermelon", name:"אבטיח ופטה על לבנה",       hint:"אבטיח, פטה, זיתים ורוקט על לבנה. חומציות קרה של קיץ",                       src:"img/watermelon.jpg"},
   {id:"tuna",       name:"דג נא בסויה וצנון",        hint:"דג נא, סויה ושמן זית, צנונית, בצל ירוק, צ'ילי ושומשום. הים קודם",             src:"img/tuna.jpg"},
   {id:"croquette",  name:"קרוקט פריך על קרם אפונה",  hint:"קרוקט מטוגן על קרם אפונה ירוק, עם גבינה מפוררת",                            src:"img/croquette.jpg"},
-  // real dishes from the Drive photo catalog (מאגר תמונות שירנסקי)
+  // real dishes from the Drive photo catalog sheet
   {id:"salmon-cabbage", name:"סלמון כבוש בכרוב סגול", hint:"סלמון כבוש בכרוב סגול בצלחת קרמיקה ירוקה, שמיר ולחם", src:"img/salmon-cabbage.jpg"},
   {id:"thai-noodles", name:"נודלס, שרימפס ובצל ירוק", hint:"נודלס תאילנדי בסלסלת במבוק, שרימפס, בייקון ובצל ירוק", src:"img/thai-noodles.jpg"},
   {id:"roast-cabbage", name:"כרוב צלוי בבלסמי ונענע", hint:"כרוב צלוי ברוטב בלסמי ונענע, בצלחת קרמיקה תכלת בעבודת יד", src:"img/roast-cabbage.jpg"},
