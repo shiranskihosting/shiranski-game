@@ -403,7 +403,9 @@ async function spin(){
   w.style.transition = "transform 5.2s cubic-bezier(.12,.62,.08,1)"; w.style.transform = `rotate(${deg}deg)`;
   SFX.whoosh(); tickWhileSpinning(w, 5300);
   setTimeout(()=>{
-    SFX.fanfare(); fireworks();
+    // every win: applause + cheering. Top two prizes (Z, V): festive trumpets; others: the regular fanfare
+    if(res.k==="Z" || res.k==="V") SFX.trumpets(); else SFX.fanfare();
+    SFX.applause(); SFX.cheer(); fireworks(res.k==="Z" ? 5200 : 3800);
     S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save();
     spinning = false; $("w_spin").textContent = "לסובב"; $("w_form").hidden = true;
     $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild, true);

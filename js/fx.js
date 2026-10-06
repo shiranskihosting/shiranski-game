@@ -45,6 +45,44 @@ const SFX = (() => {
       [0.2, 0.55, 0.9, 1.3].forEach(t => noise(t, 0.35, { vol: 0.12, freq: 900, q: 0.5, type: "lowpass" }));
     },
     pop() { noise(0, 0.18, { vol: 0.16, freq: 1200, q: 0.7 }); },
+    // crowd clapping: hundreds of short random claps that swell and fade
+    applause(dur = 4.2) {
+      const c = ac(); if (!c || muted) return;
+      const n = Math.floor(dur * 70);
+      for (let i = 0; i < n; i++) {
+        const t = Math.random() * dur, env = Math.min(1, t / 0.5) * Math.min(1, (dur - t) / 1.4);
+        noise(t, 0.03 + Math.random() * 0.03, { vol: 0.05 + 0.13 * env * Math.random(), freq: 1100 + Math.random() * 1800, q: 1.2 + Math.random() });
+      }
+    },
+    // crowd cheering: a few voices gliding up ("wooo!") with vibrato, through a vowel-like filter
+    cheer() {
+      const c = ac(); if (!c || muted) return;
+      const t0 = c.currentTime + 0.05;
+      for (let i = 0; i < 7; i++) {
+        const o = c.createOscillator(), vib = c.createOscillator(), vg = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
+        const base = 260 + Math.random() * 260, st = t0 + Math.random() * 0.35, d = 1.1 + Math.random() * 0.8;
+        o.type = "sawtooth"; o.frequency.setValueAtTime(base, st); o.frequency.exponentialRampToValueAtTime(base * 1.55, st + 0.35); o.frequency.exponentialRampToValueAtTime(base * 1.25, st + d);
+        vib.frequency.value = 5 + Math.random() * 2; vg.gain.value = base * 0.025; vib.connect(vg); vg.connect(o.frequency);
+        f.type = "bandpass"; f.frequency.value = 900 + Math.random() * 500; f.Q.value = 2.2;
+        g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.045, st + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, st + d);
+        o.connect(f); f.connect(g); g.connect(master); o.start(st); vib.start(st); o.stop(st + d + 0.05); vib.stop(st + d + 0.05);
+      }
+    },
+    // festive brass fanfare: layered sawtooth "trumpets" with a brassy swell
+    trumpets() {
+      const c = ac(); if (!c || muted) return;
+      const notes = [[392, 0, .16], [523, .18, .16], [659, .36, .16], [784, .54, .5], [659, 1.08, .14], [784, 1.24, .9]];
+      notes.forEach(([f0, t, d]) => {
+        [0, 4, -4].forEach(cents => {
+          const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), st = c.currentTime + 0.05 + t;
+          o.type = "sawtooth"; o.frequency.value = f0; o.detune.value = cents;
+          f.type = "lowpass"; f.Q.value = 1.5; f.frequency.setValueAtTime(600, st); f.frequency.linearRampToValueAtTime(3200, st + 0.06); f.frequency.linearRampToValueAtTime(1800, st + d);
+          g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.06, st + 0.04); g.gain.setValueAtTime(0.06, st + d * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, st + d + 0.08);
+          o.connect(f); f.connect(g); g.connect(master); o.start(st); o.stop(st + d + 0.12);
+        });
+      });
+      noise(1.24, 0.9, { vol: 0.08, freq: 300, q: 0.5, type: "lowpass" });
+    },
   };
 })();
 
