@@ -184,3 +184,14 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .wheel.waiting{animation:wspin .6s linear infinite}
 @keyframes wspin{to{transform:rotate(360deg)}}
 .claim[hidden]{display:none}
+
+/* Canva line illustrations (vector-traced, transparent) */
+.tile img.ill{object-fit:contain;display:block}
+.cat-ill{width:96px;height:96px;object-fit:contain;align-self:flex-start;margin-bottom:2px}
+/* sound toggle */
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mute{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--gold);display:grid;place-items:center}
+.mute svg{width:20px;height:20px}
+.mute .offi{display:none} .mute.off .on{display:none} .mute.off .offi{display:block} .mute.off{color:var(--muted)}
+/* fireworks overlay */
+.fireworks{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}

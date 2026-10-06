@@ -20,14 +20,8 @@ function platePlaceholder(name){
 function photoSrc(p){ return p.src || platePlaceholder(p.name); }
 
 /* ===================== LOBBY ===================== */
-// line illustrations for the main menu tiles (gold line on dark card; to be replaced by Canva art)
-const ILL = {
- trivia:`<path d="M22 82 Q22 38 60 38 Q98 38 98 82 Z"/><path d="M12 88 H108"/><circle cx="60" cy="31" r="5"/><path d="M52 58 q0-9 8-9 q9 0 9 8 q0 6-7 8 q-2 1-2 5"/><circle cx="60" cy="75" r=".8" fill="currentColor"/><path d="M30 96 q30 8 60 0" opacity=".5"/>`,
- flavor:`<path d="M14 82 Q60 30 106 82"/><path d="M26 82 v14 M94 82 v14 M60 56 v40" opacity=".5"/><circle cx="22" cy="70" r="11"/><path d="M22 59 v22 M11 70 h22 M14 62 l16 16 M30 62 l-16 16" opacity=".6"/><path d="M60 46 c-10-8-4-22 0-26 c4 4 10 18 0 26z"/><path d="M60 46 v-22" opacity=".6"/><path d="M92 74 c-4-12 2-20 6-22 c4 2 10 10 6 22 c-3 6-9 6-12 0z"/><path d="M98 52 q2-6 6-7"/>`,
- photo:`<circle cx="60" cy="62" r="34"/><circle cx="60" cy="62" r="24" opacity=".5"/><path d="M60 28 v14 q-6 0-6 6 q0 6 6 6 v16 M26 62 h16 q0-6 6-6 q6 0 6 6 h40" /><path d="M14 30 v48 M10 30 v12 q0 6 4 6 q4 0 4-6 v-12" /><path d="M106 30 q-8 10 0 26 v22"/>`,
- pairs:`<rect x="18" y="24" width="44" height="62" rx="7" transform="rotate(-8 40 55)"/><rect x="58" y="30" width="44" height="62" rx="7" transform="rotate(7 80 61)"/><circle cx="40" cy="55" r="11" transform="rotate(-8 40 55)"/><circle cx="80" cy="61" r="11"/><path d="M36 54 q4-5 8 0 M76 60 q4-5 8 0" opacity=".6"/>`
-};
-const illSvg = k => `<svg class="ill" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ILL[k]}</svg>`;
+// main menu illustrations: Canva line drawings, traced to transparent SVG (img/ui)
+const illSvg = k => `<img class="ill" src="img/ui/${k}.svg" alt="">`;
 const CATS = [
   {id:"trivia", name:"טריוויה", desc:"כמה אתם מכירים את "+BRAND+"?", ico:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7"/><path d="M12 17h.01"/>'},
   {id:"flavor", name:"גשר ושילובי טעמים", desc:"מנות אמיתיות מהתפריטים. מה מחבר ביניהן?", ico:'<path d="M3 17c4-7 14-7 18 0"/><path d="M6 17v3M18 17v3M12 12v8"/>'},
@@ -78,7 +72,7 @@ function renderLobby(){
 }
 function renderCat(cid){
   curCat = cid; const c = CATS.find(x=>x.id===cid);
-  $("c_title").textContent = c.name; $("c_desc").textContent = c.desc;
+  $("c_title").textContent = c.name; $("c_desc").textContent = c.desc; $("c_ill").src = "img/ui/"+cid+".svg";
   $("c_list").innerHTML = GAMES.filter(g=>g.cat===cid).map(g=>`
     <button class="game" data-g="${g.id}">
       <span class="ico"><svg viewBox="0 0 24 24">${g.ico}</svg></span>
@@ -100,7 +94,7 @@ function start(id){
   if(id==="jigsaw") startJigsaw();
   if(id==="memory2") startMemory(true);
 }
-function glow(el){ el.classList.remove("glow"); void el.offsetWidth; el.classList.add("glow"); if(navigator.vibrate) try{navigator.vibrate(30);}catch(e){} }
+function glow(el, silent){ if(!silent) SFX.good(); el.classList.remove("glow"); void el.offsetWidth; el.classList.add("glow"); if(navigator.vibrate) try{navigator.vibrate(30);}catch(e){} }
 function setStars(prefix, n){ $(prefix+"_stars").textContent = n; }
 
 /* ===================== BRIDGE ===================== */
@@ -119,7 +113,7 @@ function renderBridge(){
   $("b_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
     const good = btn.textContent===r.ok;
     $("b_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
-    if(good){ b.score++; glow(btn); } else btn.classList.add("bad");
+    if(good){ b.score++; glow(btn); } else { btn.classList.add("bad"); SFX.bad(); }
     setStars("b", b.score);
     const last = b.i===19;
     $("b_reveal").innerHTML = `<div class="reveal"><b>${good?"בדיוק.":"כמעט."} השילוב ב${BRAND}: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="b_next">${last?"לסיום המשחק":"לשילוב הבא"}</button>`;
@@ -141,7 +135,7 @@ function renderTrivia(){
   $("t_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
     const good = btn.textContent===r.ok;
     $("t_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
-    if(good){ t.score++; glow(btn); } else btn.classList.add("bad");
+    if(good){ t.score++; glow(btn); } else { btn.classList.add("bad"); SFX.bad(); }
     setStars("t", t.score);
     const last = t.i===TRIVIA.length-1;
     $("t_reveal").innerHTML = `<div class="reveal"><b>${good?"נכון.":"התשובה: "+r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="t_next">${last?"לסיום המשחק":"לשאלה הבאה"}</button>`;
@@ -163,12 +157,12 @@ function startMemory(big){
 }
 function flip(c){
   if(m.lock || c.classList.contains("flip")) return;
-  c.classList.add("flip"); m.open.push(c);
+  c.classList.add("flip"); SFX.flip(); m.open.push(c);
   if(m.open.length<2) return;
   m.moves++; $("m_moves").textContent = m.moves; m.lock = true;
   const [a,bb] = m.open;
   if(a.dataset.k===bb.dataset.k){
-    setTimeout(()=>{ a.classList.add("won"); bb.classList.add("won"); glow(a); glow(bb); m.open=[]; m.lock=false; m.matched++;
+    setTimeout(()=>{ a.classList.add("won"); bb.classList.add("won"); SFX.pair(); glow(a,true); glow(bb,true); m.open=[]; m.lock=false; m.matched++;
       if(m.matched===PAIRS.length) finishMemory(); },350);
   } else {
     setTimeout(()=>{ a.classList.remove("flip"); bb.classList.remove("flip"); m.open=[]; m.lock=false; },800);
@@ -177,7 +171,7 @@ function flip(c){
 function finishMemory(){
   const stars = m.big ? (m.moves<=17?3 : m.moves<=24?2 : 1) : (m.moves<=9?3 : m.moves<=13?2 : 1);
   const key = m.big ? "memory2" : "memory";
-  S[key] = Math.max(S[key]||0, stars); S.done[key] = true; save(); setStars("m", stars);
+  S[key] = Math.max(S[key]||0, stars); S.done[key] = true; save(); setStars("m", stars); setTimeout(()=>SFX.done(),300);
   $("m_reveal").innerHTML = `<div class="reveal"><b>${m.moves} ניסיונות, ${stars} כוכבים</b><p>${PAIRS.length} מנות אמיתיות מהתפריטים של ${BRAND}. בפעם הבאה יהיו אחרות.</p></div><button class="btn primary" id="m_done">חזרה לקטגוריה</button>`;
   $("m_done").addEventListener("click",backFromGame);
 }
@@ -212,7 +206,7 @@ function renderMatch(){
       p.sel=null; p.left--;
       if(p.left===0) finishMatchRound();
     } else {
-      p.errors++; photoBtn.classList.add("shake"); n.classList.add("bad");
+      p.errors++; SFX.bad(); photoBtn.classList.add("shake"); n.classList.add("bad");
       setTimeout(()=>{photoBtn.classList.remove("shake"); n.classList.remove("bad");},400);
     }
   }));
@@ -244,7 +238,7 @@ function renderZoom(){
     const good = btn.textContent===ph.name;
     $("z_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===ph.name) x.classList.add("ok"); });
     $("z_box").querySelector("img").style.setProperty("--z",1);
-    if(good){ z.score++; glow(btn); } else btn.classList.add("bad");
+    if(good){ z.score++; glow(btn); } else { btn.classList.add("bad"); SFX.bad(); }
     setStars("z", z.score);
     const last = z.i===z.set.length-1;
     $("z_reveal").innerHTML = `<div class="reveal"><b>${ph.name}</b><p>${ph.hint}.</p></div><button class="btn primary" id="z_next">${last?"לסיום המשחק":"לתמונה הבאה"}</button>`;
@@ -279,7 +273,7 @@ function answerTF(btn){
   const tw = $("f_time"); tw.style.transition="none"; tw.style.width = getComputedStyle(tw).width;
   const good = btn && (btn.dataset.v==="1")===r.t;
   $("f_choices").querySelectorAll(".tfbtn").forEach(x=>{ x.disabled=true; if((x.dataset.v==="1")===r.t) x.classList.add("ok"); });
-  if(good){ f.score++; glow(btn); } else if(btn) btn.classList.add("bad");
+  if(good){ f.score++; glow(btn); } else { if(btn) btn.classList.add("bad"); SFX.bad(); }
   setStars("f", f.score);
   const last = f.i===TF_N-1;
   $("f_reveal").innerHTML = `<div class="reveal"><b>${!btn?"נגמר הזמן.":good?"נכון!":"לא בדיוק."} ${r.t?"זה נכון.":"זה לא נכון."}</b><p>${r.why}</p></div><button class="btn primary" id="f_next">${last?"לסיום המשחק":"למשפט הבא"}</button>`;
@@ -304,7 +298,7 @@ function renderOdd(){
   $("o_choices").querySelectorAll(".oddbtn").forEach(btn=>btn.addEventListener("click",()=>{
     const good = btn.textContent===intruder;
     $("o_choices").querySelectorAll(".oddbtn").forEach(x=>{ x.disabled=true; if(x.textContent===intruder) x.classList.add("bad"); else x.classList.add("ok"); });
-    if(good){ o.score++; glow(btn); }
+    if(good){ o.score++; glow(btn); } else SFX.bad();
     setStars("o", o.score);
     const last = o.i===ODD_N-1;
     $("o_reveal").innerHTML = `<div class="reveal"><b>${good?"תפסת אותו.":"הזר היה: "+intruder+"."} בצלחת: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="o_next">${last?"לסיום המשחק":"למנה הבאה"}</button>`;
@@ -337,13 +331,13 @@ function tapJig(pos){
   if(j.sel===null){ j.sel=pos; drawJig(); return; }
   if(j.sel===pos){ j.sel=null; drawJig(); return; }
   [j.order[j.sel], j.order[pos]] = [j.order[pos], j.order[j.sel]];
-  j.sel=null; j.swaps++; $("j_swaps").textContent=j.swaps; drawJig();
+  j.sel=null; j.swaps++; SFX.flip(); $("j_swaps").textContent=j.swaps; drawJig();
   if(j.order.every((v,i)=>v===i)) finishJig();
 }
 function finishJig(){
   const ph = j.photos[j.round]; j.done=true;
   const won = j.swaps<=JIG_PAR; if(won) j.stars++; setStars("j", j.stars);
-  $("j_board").classList.add("solved"); glow($("j_board"));
+  $("j_board").classList.add("solved"); glow($("j_board"),true); SFX.done();
   const last = j.round===JIG_ROUNDS-1;
   $("j_reveal").innerHTML = `<div class="reveal"><b>${ph.name} · ${j.swaps} החלפות${won?". כוכב!":""}</b><p>${ph.hint}.</p></div><button class="btn primary" id="j_next">${last?"לסיום המשחק":"לפאזל הבא"}</button>`;
   $("j_next").addEventListener("click",()=>{ j.done=false; $("j_board").classList.remove("solved"); if(last){ S.jigsaw=Math.max(S.jigsaw,j.stars); S.done.jigsaw=true; save(); backFromGame(); } else { j.round++; renderJig(); } });
@@ -378,6 +372,15 @@ function openWheel(){
   show("wheel");
 }
 $("w_spin").addEventListener("click", spin);
+function tickWhileSpinning(el, ms){
+  const n = WHEEL.length, slice = 360/n, end = performance.now()+ms; let last = null, total = 0;
+  (function step(){
+    const m = getComputedStyle(el).transform;
+    if(m && m!=="none"){ const v = m.match(/matrix\(([^)]+)\)/); if(v){ const [a,b] = v[1].split(",").map(Number); const ang = Math.atan2(b,a)*180/Math.PI;
+      if(last!==null){ let d = ang-last; if(d<-180) d+=360; if(d>180) d-=360; total += Math.abs(d); while(total>=slice){ total-=slice; SFX.tick(); } } last = ang; } }
+    if(performance.now()<end) requestAnimationFrame(step);
+  })();
+}
 async function spin(){
   if(spinning || S.prize || !wheelOpen()) return;
   const name = $("w_name").value.trim(), phone = $("w_phone").value.replace(/[^\d+]/g,"");
@@ -397,10 +400,12 @@ async function spin(){
   const deg = 360*6 - res.slot*360/n + jitter;
   w.style.transition = "none"; w.style.transform = "rotate(0deg)"; void w.offsetWidth;
   w.style.transition = "transform 5.2s cubic-bezier(.12,.62,.08,1)"; w.style.transform = `rotate(${deg}deg)`;
+  SFX.whoosh(); tickWhileSpinning(w, 5300);
   setTimeout(()=>{
+    SFX.fanfare(); fireworks();
     S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save();
     spinning = false; $("w_spin").textContent = "לסובב"; $("w_form").hidden = true;
-    $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild);
+    $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild, true);
   }, 5400);
 }
 function showPrize(){
@@ -430,6 +435,7 @@ function renderResult(){
     : wheelOpen() ? `<div class="reveal"><b>הגעת ל-90%! גלגל המזל פתוח בשבילך.</b></div><button class="btn gold" id="r_spin">לסובב את גלגל המזל</button>`
     : `<p class="note">עוד ${Math.max(0,need-score)} כוכבים${GAMES.every(g=>S.done[g.id])?"":" ומשחק בכל המשחקים"} כדי לפתוח את גלגל המזל.</p>`;
   if($("r_spin")) $("r_spin").addEventListener("click", openWheel);
+  if(!S.prize && wheelOpen()){ SFX.fanfare(); fireworks(2600); }
   $("r_tags").innerHTML = CATS.map(c=>{ const d=GAMES.some(g=>g.cat===c.id&&S.done[g.id]); return `<span class="tag ${d?'on':''}">${c.name} ${d?'★'+catStars(c.id):''}</span>`; }).join("");
   const text = `${title} 🍽️\n${score} מתוך ${max} כוכבים במשחק "המטבח של ${BRAND}".\nתנסו גם: ${location.href.split('#')[0]}`;
   $("shareBtn").href = "https://wa.me/?text="+encodeURIComponent(text);
@@ -438,6 +444,16 @@ function renderResult(){
 }
 $("resetBtn").addEventListener("click",()=>{ const keep=S.prize; S=FRESH(); S.prize=keep; save(); renderLobby(); show("lobby"); });
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
+
+/* sound: soft click on ordinary buttons; answers have their own sounds */
+document.addEventListener("click", e=>{
+  const el = e.target.closest("button, a"); if(!el || el.disabled) return;
+  if(el.matches(".choice, .mem, .hub, .jp, #muteBtn")) return;
+  SFX.click();
+}, true);
+function renderMute(){ const b=$("muteBtn"); b.setAttribute("aria-pressed", SFX.muted?"true":"false"); b.setAttribute("aria-label", SFX.muted?"להפעיל צלילים":"להשתיק צלילים"); b.classList.toggle("off", SFX.muted); }
+$("muteBtn").addEventListener("click",()=>{ SFX.setMuted(!SFX.muted); renderMute(); if(!SFX.muted) SFX.click(); });
+renderMute();
 
 /* boot */
 renderLobby(); show("lobby");

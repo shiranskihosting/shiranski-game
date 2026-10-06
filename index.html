@@ -18,7 +18,7 @@
   <!-- LOBBY -->
   <section class="screen" id="lobby">
     <header class="brand">
-      <span class="eyebrow">ערב בשירנסקי מארח</span>
+      <div class="toprow"><span class="eyebrow">ערב בשירנסקי מארח</span><button class="mute" id="muteBtn" type="button"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><svg class="offi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button></div>
       <h1>המטבח של שירנסקי מארח</h1>
       <p class="lede">ארבעה עולמות של משחקים קצרים: טריוויה, טעמים, תמונות וזוגות. אוספים כוכבים, ובסוף מקבלים תואר.</p>
     </header>
@@ -39,6 +39,7 @@
   <section class="screen" id="category" hidden>
     <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>תפריט ראשי</button></div>
     <header class="brand">
+      <img class="cat-ill" id="c_ill" src="img/ui/trivia.svg" alt="">
       <span class="eyebrow">המטבח של שירנסקי מארח</span>
       <h1 id="c_title"></h1>
       <p class="lede" id="c_desc"></p>
@@ -194,6 +195,7 @@
 <div class="toast" id="toast">הועתק</div>
 
 <script src="js/data.js"></script>
+<script src="js/fx.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
