@@ -79,12 +79,12 @@ require('./server')(check);
     check(await visible() === 'category', `${game}: מהמסך סיום חוזרים לקטגוריה`);
     await page.click('#category [data-back]');
   };
-  await play('trivia', 'trivia', async () => { for (let i = 0; i < 20; i++) { await page.click('#t_choices .choice >> nth=0'); await page.click('#t_next'); } });
+  await play('trivia', 'trivia', async () => { for (let i = 0; i < 10; i++) { await page.click('#t_choices .choice >> nth=0'); await page.click('#t_next'); } });
   await play('trivia', 'tf', async () => {
     for (let i = 0; i < 10; i++) { await page.click('#f_choices .tfbtn >> nth=1'); await page.click('#f_next'); }
     check(await page.isVisible('#d_badge') && (await page.textContent('#d_badge')).includes(D.BADGES.trivia.name) && (await page.textContent('#d_badge')).includes('סוד מהמטבח'), 'סיום קטגוריה: תג וסוד מהמטבח');
   });
-  await play('flavor', 'bridge', async () => { for (let i = 0; i < 20; i++) { await page.click('#b_choices .choice >> nth=0'); await page.click('#b_next'); } });
+  await play('flavor', 'bridge', async () => { for (let i = 0; i < 10; i++) { await page.click('#b_choices .choice >> nth=0'); await page.click('#b_next'); } });
   await play('photo', 'puzzle', async () => {
     for (let r = 0; r < 3; r++) {
       const ids = await page.$$eval('#p_photos .ph', els => els.map(e => e.dataset.id));
@@ -108,6 +108,15 @@ require('./server')(check);
     return n;
   };
   await play('pairs', 'memory', async () => check(await pairs() === 12, 'זוגות מהתפריט: 12 קלפים'));
+
+  console.log('כפתור אחורה בטלפון');
+  const back = async () => { await page.evaluate(() => history.back()); await page.waitForTimeout(250); };
+  await page.evaluate(() => { localStorage.clear(); S = FRESH(); save(); renderLobby(); show('lobby'); });
+  await page.click('[data-c="photo"]'); await page.click('[data-g="zoom"]');
+  await back(); check(await visible() === 'category', 'אחורה ממשחק: חוזרים לקטגוריה');
+  await back(); check(await visible() === 'lobby' && await page.isHidden('#exitDlg'), 'אחורה מקטגוריה: חוזרים לתפריט הראשי');
+  await back(); check(await visible() === 'lobby' && await page.isVisible('#exitDlg'), 'אחורה בתפריט הראשי: נפתח חלון "לצאת מהמשחק?"');
+  await page.click('#exitStay'); check(await page.isHidden('#exitDlg') && await visible() === 'lobby', '"להישאר" סוגר את החלון ונשארים במשחק');
 
   console.log('גלגל המזל המדורג');
   check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לשרת');
@@ -149,9 +158,12 @@ require('./server')(check);
   check(spinBodies[1].games === 9 && spinBodies[1].played === 7, 'גלגל: אחרי 7 משחקים השרת מקבל את הרמה המלאה');
   check(await page.evaluate(() => [0,1,2,3,4,5,6,7].map(levelFor).join()) === '0,1,1,2,2,3,3,4', 'גלגל: רמות לפי 7 משחקים (1–2, 3–4, 5–6, 7)');
   check((await page.textContent('#w_reveal')).includes('SH-7E57A1') && await width() <= 390, 'גלגל: הקוד מוצג ללקוח ונכנס למסך');
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#w_card')]);
+  await page.click('#w_card'); await page.waitForSelector('#cardDlg:not([hidden])');
+  check(await page.evaluate(() => document.getElementById('cardImg').naturalWidth) === 1080, 'כרטיס פרס: נפתח כתמונה לשמירה (בלי חלון שיתוף)');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#cardDownload')]);
   const dlPath = await dl.path(); const png = fs.readFileSync(dlPath);
-  check(dl.suggestedFilename() === 'shiranski-prize-SH-7E57A1.png' && png.readUInt32BE(16) === 1080 && png.readUInt32BE(20) === 1350, 'כרטיס פרס: נשמר כתמונה 1080×1350 עם הקוד בשם הקובץ');
+  check(dl.suggestedFilename() === 'shiranski-prize-SH-7E57A1.jpg' && png[0] === 0xFF && png[1] === 0xD8 && png.length > 30000, 'כרטיס פרס: "להוריד" שומר קובץ תמונה עם הקוד בשם');
+  await page.click('#cardClose');
   nextSpin = { ok: true, slot: 0, win: true, k: 'K', best: 'Z', code: 'SH-7E57A1', upgraded: false, spinsLeft: 2, level: 4 };
   await page.click('#w_spin'); await page.waitForTimeout(6000);
   check(await page.evaluate(() => S.prize.k) === 'Z' && (await page.textContent('#w_reveal')).includes('נשאר לך הפרס הגבוה'), 'גלגל: פרס נמוך יותר לא מחליף את הפרס השמור');

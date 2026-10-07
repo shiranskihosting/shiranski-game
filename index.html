@@ -210,6 +210,24 @@
 
 </div>
 <div class="toast" id="toast">הועתק</div>
+<div class="modal" id="cardDlg" hidden role="dialog" aria-modal="true" aria-label="כרטיס הפרס">
+  <div class="modal-card">
+    <b>כרטיס הפרס שלך</b>
+    <img id="cardImg" class="card-img" alt="כרטיס הפרס עם הקוד">
+    <p>לשמירה בגלריה: לוחצים לחיצה ארוכה על התמונה ובוחרים "שמירת תמונה".</p>
+    <a class="btn primary" id="cardDownload" href="#" download>להוריד את הכרטיס</a>
+    <button class="btn ghost" id="cardClose" type="button">סגירה</button>
+  </div>
+</div>
+<div class="modal" id="exitDlg" hidden role="dialog" aria-modal="true" aria-labelledby="exitTitle">
+  <div class="modal-card">
+    <b id="exitTitle">לצאת מהמשחק?</b>
+    <p>הכוכבים וההתקדמות נשמרים בטלפון הזה, ואפשר להמשיך מאותה נקודה.</p>
+    <button class="btn primary" id="exitStay" type="button">להישאר</button>
+    <button class="btn ghost" id="exitGo" type="button">לצאת</button>
+    <p class="note">אפשר גם ללחוץ שוב על אחורה.</p>
+  </div>
+</div>
 
 <script src="js/data.js"></script>
 <script src="js/fx.js"></script>

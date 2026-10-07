@@ -4,7 +4,8 @@ const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, jigsaw
 let S = FRESH();
 try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = Object.assign(FRESH(), s); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4, tf:10, jigsaw:3};
+const TRIVIA_N = 10, BRIDGE_N = 10; // questions per play (picked at random from the full bank)
+const MAX = {bridge:BRIDGE_N, trivia:TRIVIA_N, memory:3, puzzle:3, zoom:4, tf:10, jigsaw:3};
 
 const $ = (id)=>document.getElementById(id);
 const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -29,9 +30,9 @@ const CATS = [
   {id:"pairs", name:"זוגות מהתפריט", desc:"מוצאים את אותה המנה פעמיים.", ico:'<rect x="3" y="4" width="8" height="10" rx="2"/><rect x="13" y="10" width="8" height="10" rx="2"/>'},
 ];
 const GAMES = [
-  {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:CATS[0].ico},
+  {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"10 שאלות על הבית, על הטעמים ועל אליס. בכל פעם אחרות.", time:"2 דק׳", ico:CATS[0].ico},
   {id:"tf",     cat:"trivia", name:"נכון או לא נכון", desc:"10 משפטים, 10 שניות לכל אחד. מהר!", time:"2 דק׳", ico:'<path d="M5 12l4 4 10-10"/>'},
-  {id:"bridge", cat:"flavor", name:"הגשר", desc:"20 מנות אמיתיות מהתפריטים. מה הרכיב השלישי?", time:"4 דק׳", ico:CATS[1].ico},
+  {id:"bridge", cat:"flavor", name:"הגשר", desc:"10 מנות אמיתיות מהתפריטים. מה הרכיב השלישי?", time:"2 דק׳", ico:CATS[1].ico},
   {id:"puzzle", cat:"photo", name:"תמונה ושם", desc:"מתאימים כל תמונה לשם המנה שלה.", time:"2 דק׳", ico:CATS[2].ico},
   {id:"zoom",   cat:"photo", name:"מה בצלחת?", desc:"תקריב שהולך ונפתח. מזהים את המנה?", time:"1 דק׳", ico:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5M11 8v6M8 11h6"/>'},
   {id:"jigsaw", cat:"photo", name:"פאזל חלקים", desc:"מנה מפורקת ל-9 חלקים. מחזירים אותה לצלחת.", time:"3 דק׳", ico:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>'},
@@ -204,13 +205,13 @@ function setStars(prefix, n){ $(prefix+"_stars").textContent = n; }
 /* ===================== BRIDGE ===================== */
 let b = {i:0, score:0, order:[]};
 function startBridge(){
-  b = {i:0, score:0, order:shuffle(BRIDGE.map((_,i)=>i)).slice(0,20)};
-  $("b_tot").textContent = 20; show("bridge"); renderBridge();
+  b = {i:0, score:0, order:shuffle(BRIDGE.map((_,i)=>i)).slice(0,BRIDGE_N)};
+  $("b_tot").textContent = BRIDGE_N; show("bridge"); renderBridge();
 }
 function renderBridge(){
   const r = BRIDGE[b.order[b.i]];
   $("b_q").textContent = "מנה מהתפריט: "+r.dish+". מה הרכיב השלישי?";
-  $("b_n").textContent = b.i+1; $("b_prog").style.width = (b.i/20*100)+"%"; setStars("b", b.score);
+  $("b_n").textContent = b.i+1; $("b_prog").style.width = (b.i/BRIDGE_N*100)+"%"; setStars("b", b.score);
   $("b_pair").innerHTML = `<span class="ing">${r.a}</span><span class="plus">+</span><span class="ing">${r.b}</span><span class="plus">+</span><span class="ing q">?</span>`;
   $("b_reveal").innerHTML = "";
   $("b_choices").innerHTML = shuffle(r.opts).map(o=>`<button class="choice">${o}</button>`).join("");
@@ -219,7 +220,7 @@ function renderBridge(){
     $("b_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
     if(good){ b.score++; glow(btn); } else { btn.classList.add("bad"); SFX.bad(); }
     setStars("b", b.score);
-    const last = b.i===19;
+    const last = b.i===BRIDGE_N-1;
     $("b_reveal").innerHTML = `<div class="reveal"><b>${good?"בדיוק.":"כמעט."} השילוב ב${BRAND}: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="b_next">${last?"לסיום המשחק":"לשילוב הבא"}</button>`;
     $("b_next").addEventListener("click",()=>{ if(last){ S.bridge=b.score; S.done.bridge=true; save(); finishGame("bridge", b.score); } else { b.i++; renderBridge(); } });
   }));
@@ -228,12 +229,12 @@ function renderBridge(){
 /* ===================== TRIVIA ===================== */
 let t = {i:0, score:0, order:[]};
 function startTrivia(){
-  t = {i:0, score:0, order:TRIVIA.map((_,i)=>i)};
-  $("t_tot").textContent = TRIVIA.length; show("trivia"); renderTrivia();
+  t = {i:0, score:0, order:shuffle(TRIVIA.map((_,i)=>i)).slice(0,TRIVIA_N)};
+  $("t_tot").textContent = TRIVIA_N; show("trivia"); renderTrivia();
 }
 function renderTrivia(){
   const r = TRIVIA[t.order[t.i]];
-  $("t_n").textContent = t.i+1; $("t_prog").style.width = (t.i/TRIVIA.length*100)+"%"; setStars("t", t.score);
+  $("t_n").textContent = t.i+1; $("t_prog").style.width = (t.i/TRIVIA_N*100)+"%"; setStars("t", t.score);
   $("t_q").textContent = r.q; $("t_reveal").innerHTML = "";
   $("t_choices").innerHTML = shuffle(r.opts).map(o=>`<button class="choice">${o}</button>`).join("");
   $("t_choices").querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{
@@ -241,7 +242,7 @@ function renderTrivia(){
     $("t_choices").querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.textContent===r.ok) x.classList.add("ok"); });
     if(good){ t.score++; glow(btn); } else { btn.classList.add("bad"); SFX.bad(); }
     setStars("t", t.score);
-    const last = t.i===TRIVIA.length-1;
+    const last = t.i===TRIVIA_N-1;
     $("t_reveal").innerHTML = `<div class="reveal"><b>${good?"נכון.":"התשובה: "+r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="t_next">${last?"לסיום המשחק":"לשאלה הבאה"}</button>`;
     $("t_next").addEventListener("click",()=>{ if(last){ S.trivia=t.score; S.done.trivia=true; save(); finishGame("trivia", t.score); } else { t.i++; renderTrivia(); } });
   }));
@@ -624,22 +625,24 @@ async function makePrizeCard(){
   c.direction = "ltr"; text("shiranskihosting.github.io/shiranski-game", H-80, "400 26px "+BODY, "#A9AC86");
   return cv;
 }
+// Shows the card as an image to keep: long-press saves it to the gallery (Android and iPhone),
+// and "להוריד" saves the file. No share sheet.
+let cardURL = null;
 async function savePrizeCard(){
   const btn = $("w_card"); if(btn) btn.disabled = true;
   try{
     const cv = await makePrizeCard();
-    const blob = await new Promise(r=>cv.toBlob(r, "image/png"));
-    const name = `shiranski-prize-${S.prize.code}.png`;
-    const file = typeof File==="function" ? new File([blob], name, {type:"image/png"}) : null;
-    if(file && navigator.canShare && navigator.canShare({files:[file]})){
-      try{ await navigator.share({files:[file], title:"הפרס שלי בשירנסקי מארח"}); return; }catch(e){ if(e && e.name==="AbortError") return; }
-    }
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    toast("הכרטיס נשמר");
+    const blob = await new Promise(r=>cv.toBlob(r, "image/jpeg", 0.92));
+    if(cardURL) URL.revokeObjectURL(cardURL);
+    cardURL = URL.createObjectURL(blob);
+    $("cardImg").src = cardURL;
+    const dl = $("cardDownload"); dl.href = cardURL; dl.download = `shiranski-prize-${S.prize.code}.jpg`;
+    $("cardDlg").hidden = false;
   }catch(e){ toast("לא הצלחנו ליצור את הכרטיס"); }
   finally{ if(btn) btn.disabled = false; }
 }
+$("cardClose").addEventListener("click", ()=>{ $("cardDlg").hidden = true; });
+$("cardDownload").addEventListener("click", ()=>setTimeout(()=>toast("הכרטיס נשמר"), 300));
 
 /* ===================== RESULT ===================== */
 function titleFor(score, max){
@@ -689,6 +692,32 @@ document.addEventListener("click", e=>{
 function renderMute(){ const b=$("muteBtn"); b.setAttribute("aria-pressed", SFX.muted?"true":"false"); b.setAttribute("aria-label", SFX.muted?"להפעיל צלילים":"להשתיק צלילים"); b.classList.toggle("off", SFX.muted); }
 $("muteBtn").addEventListener("click",()=>{ SFX.setMuted(!SFX.muted); renderMute(); if(!SFX.muted) SFX.click(); });
 renderMute();
+
+/* ===================== PHONE BACK BUTTON ===================== */
+// The back button moves one screen up inside the game instead of leaving it.
+// On the main menu the first back opens "לצאת מהמשחק?"; a second back (or "לצאת") leaves.
+let exitArmed = false;
+const GAME_SCREENS = ["bridge","trivia","memory","puzzle","zoom","tf","jigsaw"];
+function visibleScreen(){ const el = document.querySelector(".screen:not([hidden])"); return el ? el.id : "lobby"; }
+function showExit(on){ exitArmed = on; $("exitDlg").hidden = !on; }
+function backOneScreen(){
+  const cur = visibleScreen();
+  if(cur==="category"){ renderLobby(); show("lobby"); }
+  else if(GAME_SCREENS.includes(cur) || cur==="done") backFromGame();
+  else { renderLobby(); show("lobby"); }   // wheel, result
+}
+function guard(){ try{ history.pushState({shiranski:1}, ""); }catch(e){} }
+window.addEventListener("popstate", ()=>{
+  if(!$("cardDlg").hidden){ $("cardDlg").hidden = true; guard(); return; }
+  if(exitArmed){ exitArmed = false; history.back(); return; }   // second back on the main menu: really leave
+  if(spinning){ guard(); return; }                               // never interrupt a spin
+  if(visibleScreen()!=="lobby"){ backOneScreen(); guard(); return; }
+  showExit(true); guard();
+});
+$("exitStay").addEventListener("click", ()=>showExit(false));
+$("exitGo").addEventListener("click", ()=>{ $("exitDlg").hidden = true; history.back(); });
+try{ history.replaceState({shiranski:0}, ""); }catch(e){}
+guard();
 
 /* boot */
 renderLobby(); show("lobby");
