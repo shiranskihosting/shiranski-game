@@ -36,7 +36,7 @@ require('./server')(check);
 // ---------- 2. Playing the game in a phone-size browser ----------
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, acceptDownloads: true });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   // fake game server: statistics → 'ok', spin → the next prepared answer
@@ -149,6 +149,9 @@ require('./server')(check);
   check(spinBodies.length === 2 && prize && prize.k === 'Z' && prize.code === 'SH-7E57A1', 'גלגל: ברמה 4 בלי אזהרה; הפרס והקוד מהשרת נשמרים');
   check(spinBodies[1].consent === true && await page.isHidden('#w_consentbox'), 'גלגל: הסכמה נשלחת, והתיבה לא מוצגת שוב');
   check((await page.textContent('#w_reveal')).includes('SH-7E57A1') && await width() <= 390, 'גלגל: הקוד מוצג ללקוח ונכנס למסך');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#w_card')]);
+  const dlPath = await dl.path(); const png = fs.readFileSync(dlPath);
+  check(dl.suggestedFilename() === 'shiranski-prize-SH-7E57A1.png' && png.readUInt32BE(16) === 1080 && png.readUInt32BE(20) === 1350, 'כרטיס פרס: נשמר כתמונה 1080×1350 עם הקוד בשם הקובץ');
   nextSpin = { ok: true, slot: 0, win: true, k: 'K', best: 'Z', code: 'SH-7E57A1', upgraded: false, spinsLeft: 2, level: 4 };
   await page.click('#w_spin'); await page.waitForTimeout(6000);
   check(await page.evaluate(() => S.prize.k) === 'Z' && (await page.textContent('#w_reveal')).includes('נשאר לך הפרס הגבוה'), 'גלגל: פרס נמוך יותר לא מחליף את הפרס השמור');

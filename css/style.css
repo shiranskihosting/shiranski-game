@@ -39,7 +39,7 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .game .meta{order:2;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:13px;color:var(--muted);white-space:nowrap}
 .game .done{color:var(--gold);font-weight:700}
 .finish{margin-top:auto;display:grid;gap:10px}
-.note{font-size:13px;color:var(--muted);text-align:center;margin:0}
+.note{font-size:14px;color:var(--muted);text-align:center;margin:0}
 
 /* generic stage */
 .stage{display:flex;flex-direction:column;gap:16px;flex:1}
@@ -176,7 +176,7 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .prize{text-align:center;justify-items:center}
 .prize-name{font-size:24px}
 .prize-code{font-family:ui-monospace,Menlo,monospace;font-size:22px;letter-spacing:.12em;direction:ltr;background:var(--bg);border:1px dashed var(--gold);border-radius:10px;padding:6px 14px;color:var(--fg)}
-.terms{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 0;line-height:1.5}
+.terms{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 0;line-height:1.5}
 .claim{display:grid;gap:8px}
 .claim input{font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
 .claim input:focus{outline:2px solid var(--gold);outline-offset:1px}
@@ -222,3 +222,4 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--fg);cursor:pointer;line-height:1.4}
 .consent input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--gold)}
 .consent[hidden]{display:none}
+.claim input::placeholder{color:#958C7D}

@@ -420,7 +420,7 @@ function drawWheel(lv){
     const a0 = -Math.PI/2 - a/2 + i*a, a1 = a0 + a;
     const x0 = cx+R*Math.cos(a0), y0 = cy+R*Math.sin(a0), x1 = cx+R*Math.cos(a1), y1 = cy+R*Math.sin(a1);
     const fill = open ? (PRIZES[k].fill || (i%2 ? "#1F1C19" : "#2A2621")) : "#0E0C0B";
-    const ink = open ? (PRIZES[k].ink || "#F4EEE3") : "rgba(244,238,227,.26)";
+    const ink = open ? (PRIZES[k].ink || "#F4EEE3") : "rgba(244,238,227,.42)";
     const mid = a0 + a/2, deg = mid*180/Math.PI;
     const tx = cx+R*0.62*Math.cos(mid), ty = cy+R*0.62*Math.sin(mid);
     const len = PRIZES[k].short.length;
@@ -549,11 +549,84 @@ async function spin(){
 function showPrize(note){
   const P = PRIZES[S.prize.k], left = spinsLeft(), lv = level();
   $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span>${note?`<p>${note}</p>`:""}<p>כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות. קוד אחד לשחקן: אם תזכו בפרס גבוה יותר, הקוד נשאר והפרס משתדרג.</p></div>
+    <button class="btn gold" id="w_card">לשמור את כרטיס הפרס כתמונה</button>
     <button class="btn ghost" id="w_copy">להעתיק את הקוד</button>
     ${left>0 && lv<4 ? `<button class="btn primary" id="w_play">להמשיך לשחק ולשדרג את הגלגל</button>` : ""}
-    <a class="btn gold" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
+    <a class="btn primary" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
+  $("w_card").addEventListener("click", savePrizeCard);
   $("w_copy").addEventListener("click",()=>{ navigator.clipboard.writeText(S.prize.code).then(()=>toast("הקוד הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); });
   if($("w_play")) $("w_play").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
+}
+
+/* ===================== PRIZE CARD (image to keep) ===================== */
+// A 1080×1350 card drawn on a canvas: brand, prize, code, name, how to redeem, terms. Saved to the phone or shared to WhatsApp.
+async function makePrizeCard(){
+  const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"), P = PRIZES[S.prize.k];
+  const DISPLAY = '"Playpen Sans Hebrew", "Assistant", sans-serif', BODY = '"Assistant", sans-serif';
+  try{ await Promise.race([Promise.all(['700 80px "Playpen Sans Hebrew"','700 40px "Assistant"','400 30px "Assistant"'].map(f=>document.fonts.load(f))), new Promise(r=>setTimeout(r,1500))]); }catch(e){}
+  c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle";
+  // ground + warm glow
+  c.fillStyle = "#141210"; c.fillRect(0,0,W,H);
+  const g = c.createRadialGradient(W/2, 330, 40, W/2, 330, 620); g.addColorStop(0,"rgba(201,169,110,.20)"); g.addColorStop(1,"rgba(201,169,110,0)");
+  c.fillStyle = g; c.fillRect(0,0,W,H);
+  const rr = (x,y,w,h,r)=>{ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); };
+  // double gold frame, like the menu cards
+  c.lineWidth = 3; c.strokeStyle = "rgba(201,169,110,.75)"; rr(40,40,W-80,H-80,34); c.stroke();
+  c.lineWidth = 1.5; c.strokeStyle = "rgba(201,169,110,.28)"; rr(58,58,W-116,H-116,26); c.stroke();
+  // small wheel
+  const cx = W/2, cy = 205, R = 78;
+  for(let i=0;i<20;i++){ const a0 = -Math.PI/2 + (i-.5)*Math.PI/10, a1 = a0 + Math.PI/10;
+    c.beginPath(); c.moveTo(cx,cy); c.arc(cx,cy,R,a0,a1); c.closePath();
+    const k = WHEEL[i]; c.fillStyle = PRIZES[k].fill ? PRIZES[k].fill : (i%2 ? "#1F1C19" : "#2A2621"); c.fill();
+    c.strokeStyle = "rgba(201,169,110,.5)"; c.lineWidth = 1; c.stroke(); }
+  c.beginPath(); c.arc(cx,cy,R,0,Math.PI*2); c.strokeStyle = "#C9A96E"; c.lineWidth = 4; c.stroke();
+  c.beginPath(); c.arc(cx,cy,22,0,Math.PI*2); c.fillStyle = "#C9A96E"; c.fill();
+  c.beginPath(); c.moveTo(cx-16,cy-R-26); c.lineTo(cx+16,cy-R-26); c.lineTo(cx,cy-R+8); c.closePath(); c.fill();
+  // texts
+  const text = (t, y, font, color)=>{ c.font = font; c.fillStyle = color; c.fillText(t, W/2, y); };
+  const wrap = (t, y, font, color, maxW, lh)=>{ c.font = font; const words = t.split(" "), lines = []; let line = "";
+    words.forEach(w=>{ const tryL = line ? line+" "+w : w; if(c.measureText(tryL).width > maxW && line){ lines.push(line); line = w; } else line = tryL; }); if(line) lines.push(line);
+    lines.forEach((l,i)=>text(l, y + i*lh, font, color)); return y + lines.length*lh; };
+  text("גלגל המזל של "+BRAND, 345, "600 32px "+BODY, "#A9AC86");
+  text("הפרס שלך", 420, "400 40px "+BODY, "#B8AE9E");
+  // prize name: as big as fits, two lines if it must
+  let size = 104; c.font = `700 ${size}px ${DISPLAY}`;
+  while(c.measureText(P.label).width > 900 && size > 76){ size -= 4; c.font = `700 ${size}px ${DISPLAY}`; }
+  let y = 520;
+  if(c.measureText(P.label).width > 900){ y = wrap(P.label, 500, `700 ${size}px ${DISPLAY}`, "#C9A96E", 900, size*1.15) - size*0.5; }
+  else { text(P.label, y, `700 ${size}px ${DISPLAY}`, "#C9A96E"); }
+  // code box
+  const by = y + 165; c.setLineDash([14,10]); c.lineWidth = 3; c.strokeStyle = "#C9A96E"; rr(W/2-300, by-70, 600, 140, 22);
+  c.fillStyle = "#0E0C0B"; c.fill(); c.stroke(); c.setLineDash([]);
+  c.direction = "ltr"; if("letterSpacing" in c) c.letterSpacing = "10px";
+  text(S.prize.code, by+4, "600 76px ui-monospace, Menlo, Consolas, monospace", "#F4EEE3");
+  if("letterSpacing" in c) c.letterSpacing = "0px"; c.direction = "rtl";
+  let ty = by + 155;
+  if(S.who && S.who.name) { text("על שם: "+S.who.name, ty, "600 40px "+BODY, "#F4EEE3"); ty += 80; }
+  ty = wrap("כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות.", ty, "400 36px "+BODY, "#F4EEE3", 880, 50) + 30;
+  wrap(PRIZE_TERMS, ty, "400 30px "+BODY, "#B8AE9E", 880, 44);
+  // footer
+  c.strokeStyle = "rgba(201,169,110,.3)"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(220, H-170); c.lineTo(W-220, H-170); c.stroke();
+  text(BRAND+" · שף פרטי בחיפה · 054-4714766", H-125, "600 32px "+BODY, "#F4EEE3");
+  c.direction = "ltr"; text("shiranskihosting.github.io/shiranski-game", H-80, "400 26px "+BODY, "#A9AC86");
+  return cv;
+}
+async function savePrizeCard(){
+  const btn = $("w_card"); if(btn) btn.disabled = true;
+  try{
+    const cv = await makePrizeCard();
+    const blob = await new Promise(r=>cv.toBlob(r, "image/png"));
+    const name = `shiranski-prize-${S.prize.code}.png`;
+    const file = typeof File==="function" ? new File([blob], name, {type:"image/png"}) : null;
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:"הפרס שלי בשירנסקי מארח"}); return; }catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    toast("הכרטיס נשמר");
+  }catch(e){ toast("לא הצלחנו ליצור את הכרטיס"); }
+  finally{ if(btn) btn.disabled = false; }
 }
 
 /* ===================== RESULT ===================== */
