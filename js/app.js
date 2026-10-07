@@ -140,7 +140,6 @@ function renderCat(cid){
   $("c_list").querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.g)));
 }
 function backFromGame(){ clearInterval(f && f.timer); if(curCat){ renderCat(curCat); show("category"); } else { renderLobby(); show("lobby"); } }
-$("finishBtn").addEventListener("click", renderResult);
 const gameName = id => (GAMES.find(g=>g.id===id)||{}).name || id;
 function trackDone(id, stars){ TRACK.ev("סיום", gameName(id), stars); if(gamesLeft()===0) TRACK.ev("גלגל"); }
 function catComplete(c){ return !!c && GAMES.filter(g=>g.cat===c).every(g=>S.done[g.id]); }

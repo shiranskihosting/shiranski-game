@@ -53,7 +53,7 @@ require('./server')(check);
 
   console.log('משחק');
   await fresh();
-  check(await page.locator('.tile').count() === 4, 'תפריט ראשי: 4 קטגוריות') ; check(await page.evaluate(() => GAMES.length) === 7, 'סך הכול 7 משחקים');
+  check(await page.locator('.tile').count() === 4, 'תפריט ראשי: 4 קטגוריות') ; check(await page.locator('#finishBtn').count() === 0, 'תפריט ראשי: בלי כפתור "לתוצאה ולשיתוף"') ; check(await page.evaluate(() => GAMES.length) === 7, 'סך הכול 7 משחקים');
   check(await width() <= 390, 'תפריט ראשי: אין גלילה הצידה');
   check((await page.getAttribute('#bookBtn', 'href')) === D.TALLY_URL, 'כפתור הזמנת מקום מוביל לטופס Tally');
   check((await page.textContent('#startBtn')).includes('נכון או לא נכון'), 'תפריט ראשי: כפתור "להתחיל לשחק" מציע משחק קצר');
@@ -124,7 +124,7 @@ require('./server')(check);
   await page.evaluate(() => { localStorage.clear(); S = FRESH(); save(); renderLobby(); show('lobby'); });
   check((await page.textContent('#promo')).includes('שחקו כדי לקבל ממני מתנה'), 'פרומו: "שחקו כדי לקבל ממני מתנה!"');
   check((await page.textContent('#promo_line')).includes('מסיימים משחק אחד'), 'פרומו: לפני משחק ראשון הגלגל סגור');
-  await page.click('#finishBtn');
+  await page.evaluate(() => renderResult());
   check(await page.locator('#r_spin').count() === 0, 'מסך תוצאה: בלי משחק אחד אין גלגל');
   await page.click('#result [data-back]');
   await setDone(1);
