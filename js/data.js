@@ -194,7 +194,7 @@ const BADGES = {
 // the order "למשחק הבא" suggests: short and easy first, the big ones last
 const GAME_ORDER = ["tf","zoom","puzzle","memory","odd","jigsaw","trivia","bridge","memory2"];
 
-// --- סט עונתי לזמן מוגבל (נכון או לא נכון). מופיע בתפריט רק בין from ל-to. לא משנה את גלגל המזל:
+// --- סט עונתי לזמן מוגבל (נכון או לא נכון). מופיע בתפריט רק בין from ל-to. לא משנה את גלגל המזל (סט חנוכה 2026 אושר ע"י שירן 8.10.2026):
 // מקבלים עליו תג וסוד מהמטבח. תצוגה מקדימה בכל זמן: ?season=<id>
 const SEASONS = [
   {id:"hanukkah2026", name:"סט חנוכה", from:"2026-11-27", to:"2026-12-12", until:"12.12",
