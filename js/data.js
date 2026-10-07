@@ -179,3 +179,5 @@ const TALLY_URL = "https://tally.so/r/EkRN1A";
 const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
 // The prize is drawn by Make (not in the browser) and every code is logged in Shiran's private sheet.
 const SPIN_URL = "https://hook.eu1.make.com/i1bwo3cdw4nvplh1rn8atd1nfw4pb85g";
+// Anonymous play statistics (Apps Script web app on the sheet "נתוני משחק – שירנסקי מארח"). Empty = off.
+const TRACK_URL = "";

@@ -84,7 +84,10 @@ function renderCat(cid){
 }
 function backFromGame(){ clearInterval(f && f.timer); if(curCat){ renderCat(curCat); show("category"); } else { renderLobby(); show("lobby"); } }
 $("finishBtn").addEventListener("click", renderResult);
+const gameName = id => (GAMES.find(g=>g.id===id)||{}).name || id;
+function trackDone(id, stars){ TRACK.ev("סיום", gameName(id), stars); if(gamesLeft()===0) TRACK.ev("גלגל"); }
 function start(id){
+  TRACK.ev("התחלה", gameName(id));
   if(id==="bridge") startBridge();
   if(id==="trivia") startTrivia();
   if(id==="memory") startMemory();
@@ -118,7 +121,7 @@ function renderBridge(){
     setStars("b", b.score);
     const last = b.i===19;
     $("b_reveal").innerHTML = `<div class="reveal"><b>${good?"בדיוק.":"כמעט."} השילוב ב${BRAND}: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="b_next">${last?"לסיום המשחק":"לשילוב הבא"}</button>`;
-    $("b_next").addEventListener("click",()=>{ if(last){ S.bridge=b.score; S.done.bridge=true; save(); backFromGame(); } else { b.i++; renderBridge(); } });
+    $("b_next").addEventListener("click",()=>{ if(last){ S.bridge=b.score; S.done.bridge=true; save(); trackDone("bridge", b.score); backFromGame(); } else { b.i++; renderBridge(); } });
   }));
 }
 
@@ -140,7 +143,7 @@ function renderTrivia(){
     setStars("t", t.score);
     const last = t.i===TRIVIA.length-1;
     $("t_reveal").innerHTML = `<div class="reveal"><b>${good?"נכון.":"התשובה: "+r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="t_next">${last?"לסיום המשחק":"לשאלה הבאה"}</button>`;
-    $("t_next").addEventListener("click",()=>{ if(last){ S.trivia=t.score; S.done.trivia=true; save(); backFromGame(); } else { t.i++; renderTrivia(); } });
+    $("t_next").addEventListener("click",()=>{ if(last){ S.trivia=t.score; S.done.trivia=true; save(); trackDone("trivia", t.score); backFromGame(); } else { t.i++; renderTrivia(); } });
   }));
 }
 
@@ -172,7 +175,7 @@ function flip(c){
 function finishMemory(){
   const stars = m.big ? (m.moves<=17?3 : m.moves<=24?2 : 1) : (m.moves<=9?3 : m.moves<=13?2 : 1);
   const key = m.big ? "memory2" : "memory";
-  S[key] = Math.max(S[key]||0, stars); S.done[key] = true; save(); setStars("m", stars); setTimeout(()=>SFX.done(),300);
+  S[key] = Math.max(S[key]||0, stars); S.done[key] = true; save(); trackDone(key, stars); setStars("m", stars); setTimeout(()=>SFX.done(),300);
   $("m_reveal").innerHTML = `<div class="reveal"><b>${m.moves} ניסיונות, ${stars} כוכבים</b><p>${PAIRS.length} מנות אמיתיות מהתפריטים של ${BRAND}. בפעם הבאה יהיו אחרות.</p></div><button class="btn primary" id="m_done">חזרה לקטגוריה</button>`;
   $("m_done").addEventListener("click",backFromGame);
 }
@@ -218,7 +221,7 @@ function finishMatchRound(){
   const last = p.round===2;
   const names = p.set.map(x=>`<b>${x.name}</b>: ${x.hint}`).join("<br>");
   $("p_reveal").innerHTML = `<div class="reveal"><b>${won?"בלי טעויות. כוכב.":"הסיבוב הושלם, עם "+p.errors+" טעויות."}</b><p>${names}</p></div><button class="btn primary" id="p_next">${last?"לסיום המשחק":"לסיבוב הבא"}</button>`;
-  $("p_next").addEventListener("click",()=>{ if(last){ S.puzzle=p.stars; S.done.puzzle=true; save(); backFromGame(); } else { p.round++; renderMatch(); } });
+  $("p_next").addEventListener("click",()=>{ if(last){ S.puzzle=p.stars; S.done.puzzle=true; save(); trackDone("puzzle", p.stars); backFromGame(); } else { p.round++; renderMatch(); } });
 }
 
 /* ===================== ZOOM ===================== */
@@ -243,7 +246,7 @@ function renderZoom(){
     setStars("z", z.score);
     const last = z.i===z.set.length-1;
     $("z_reveal").innerHTML = `<div class="reveal"><b>${ph.name}</b><p>${ph.hint}.</p></div><button class="btn primary" id="z_next">${last?"לסיום המשחק":"לתמונה הבאה"}</button>`;
-    $("z_next").addEventListener("click",()=>{ if(last){ S.zoom=z.score; S.done.zoom=true; save(); backFromGame(); } else { z.i++; renderZoom(); } });
+    $("z_next").addEventListener("click",()=>{ if(last){ S.zoom=z.score; S.done.zoom=true; save(); trackDone("zoom", z.score); backFromGame(); } else { z.i++; renderZoom(); } });
   }));
 }
 
@@ -278,7 +281,7 @@ function answerTF(btn){
   setStars("f", f.score);
   const last = f.i===TF_N-1;
   $("f_reveal").innerHTML = `<div class="reveal"><b>${!btn?"נגמר הזמן.":good?"נכון!":"לא בדיוק."} ${r.t?"זה נכון.":"זה לא נכון."}</b><p>${r.why}</p></div><button class="btn primary" id="f_next">${last?"לסיום המשחק":"למשפט הבא"}</button>`;
-  $("f_next").addEventListener("click",()=>{ if(last){ S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); backFromGame(); } else { f.i++; renderTF(); } });
+  $("f_next").addEventListener("click",()=>{ if(last){ S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); trackDone("tf", f.score); backFromGame(); } else { f.i++; renderTF(); } });
 }
 
 /* ===================== ODD ONE OUT ===================== */
@@ -303,7 +306,7 @@ function renderOdd(){
     setStars("o", o.score);
     const last = o.i===ODD_N-1;
     $("o_reveal").innerHTML = `<div class="reveal"><b>${good?"תפסת אותו.":"הזר היה: "+intruder+"."} בצלחת: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="o_next">${last?"לסיום המשחק":"למנה הבאה"}</button>`;
-    $("o_next").addEventListener("click",()=>{ if(last){ S.odd=Math.max(S.odd,o.score); S.done.odd=true; save(); backFromGame(); } else { o.i++; renderOdd(); } });
+    $("o_next").addEventListener("click",()=>{ if(last){ S.odd=Math.max(S.odd,o.score); S.done.odd=true; save(); trackDone("odd", o.score); backFromGame(); } else { o.i++; renderOdd(); } });
   }));
 }
 
@@ -341,7 +344,7 @@ function finishJig(){
   $("j_board").classList.add("solved"); glow($("j_board"),true); SFX.done();
   const last = j.round===JIG_ROUNDS-1;
   $("j_reveal").innerHTML = `<div class="reveal"><b>${ph.name} · ${j.swaps} החלפות${won?". כוכב!":""}</b><p>${ph.hint}.</p></div><button class="btn primary" id="j_next">${last?"לסיום המשחק":"לפאזל הבא"}</button>`;
-  $("j_next").addEventListener("click",()=>{ j.done=false; $("j_board").classList.remove("solved"); if(last){ S.jigsaw=Math.max(S.jigsaw,j.stars); S.done.jigsaw=true; save(); backFromGame(); } else { j.round++; renderJig(); } });
+  $("j_next").addEventListener("click",()=>{ j.done=false; $("j_board").classList.remove("solved"); if(last){ S.jigsaw=Math.max(S.jigsaw,j.stars); S.done.jigsaw=true; save(); trackDone("jigsaw", j.stars); backFromGame(); } else { j.round++; renderJig(); } });
 }
 
 
@@ -406,7 +409,7 @@ async function spin(){
     // every win: applause + cheering. Top two prizes (Z, V): festive trumpets; others: the regular fanfare
     if(res.k==="Z" || res.k==="V") SFX.trumpets(); else SFX.fanfare();
     SFX.applause(); SFX.cheer(); fireworks(res.k==="Z" ? 5200 : 3800);
-    S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save();
+    S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save(); TRACK.ev("סיבוב", "", PRIZES[res.k].label); TRACK.flush();
     spinning = false; $("w_spin").textContent = "לסובב"; $("w_form").hidden = true;
     $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild, true);
   }, 5400);
@@ -447,6 +450,16 @@ function renderResult(){
 }
 $("resetBtn").addEventListener("click",()=>{ const keep=S.prize; S=FRESH(); S.prize=keep; save(); renderLobby(); show("lobby"); });
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
+
+/* statistics: booking and sharing clicks */
+document.addEventListener("click", e=>{
+  const a = e.target.closest("a, button"); if(!a) return;
+  const href = a.getAttribute("href") || "";
+  if(href.indexOf(TALLY_URL)===0) { TRACK.ev("הזמנה", "", a.closest("#wheel") ? "טופס מהגלגל" : "טופס"); TRACK.flush(); }
+  else if(href.indexOf("https://wa.me/972")===0) { TRACK.ev("הזמנה", "", "וואטסאפ"); TRACK.flush(); }
+  else if(a.id==="shareBtn") { TRACK.ev("שיתוף", "", "וואטסאפ"); TRACK.flush(); }
+  else if(a.id==="copyBtn") TRACK.ev("שיתוף", "", "העתקה");
+}, true);
 
 /* sound: soft click on ordinary buttons; answers have their own sounds */
 document.addEventListener("click", e=>{

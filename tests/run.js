@@ -9,7 +9,7 @@ const check = (ok, msg) => { if (!ok) fails.push(msg); console.log((ok ? '  ✓ 
 // ---------- 1. Content checks (no browser) ----------
 console.log('תוכן');
 const ctx = { console }; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL};', ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL,TRACK_URL};', ctx);
 const D = ctx.D;
 check(D.BRIDGE.length >= 20, `הגשר: לפחות 20 מנות (${D.BRIDGE.length})`);
 check(D.BRIDGE.every(r => r.opts.includes(r.ok) && new Set(r.opts).size === 4), 'הגשר: בכל מנה 4 אפשרויות שונות והתשובה ביניהן');
@@ -110,6 +110,25 @@ for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', '
   check(prize && prize.k === 'Z' && prize.code === 'SH-7E57A1', 'גלגל: הפרס והקוד מגיעים מ-Make ונשמרים');
   check(await width() <= 390, 'גלגל: נכנס למסך');
   check((await page.textContent('#w_reveal')).includes('SH-7E57A1'), 'גלגל: הקוד מוצג ללקוח');
+
+  console.log('נתונים סטטיסטיים');
+  check(D.TRACK_URL === '' || /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(D.TRACK_URL), 'נתונים: כתובת הגיליון ריקה או כתובת Apps Script תקינה');
+  const stats = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  stats.on('pageerror', e => errors.push(e.message));
+  const got = [];
+  await stats.route('https://script.google.com/**', r => { got.push(r.request().postData()); r.fulfill({ status: 200, body: 'ok' }); });
+  await stats.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await stats.addInitScript(() => { window.TRACK_TEST_URL = 'https://script.google.com/macros/s/TEST/exec'; });
+  await stats.goto(URL + '?src=qr'); await stats.evaluate(() => localStorage.clear()); await stats.goto(URL + '?src=qr', { waitUntil: 'load' });
+  await stats.click('[data-c="trivia"]'); await stats.click('[data-g="tf"]');
+  for (let i = 0; i < 10; i++) { await stats.click('#f_choices .tfbtn >> nth=0'); await stats.click('#f_next'); }
+  await stats.evaluate(() => TRACK.flush());
+  await stats.waitForTimeout(400);
+  const evs = got.flatMap(b => { const j = JSON.parse(b); return j.ev.map(e => ({ s: j.s, p: j.p, e: e[1], g: e[2], v: e[3] })); });
+  check(evs.some(e => e.e === 'כניסה' && e.v === 'חדש' && e.s === 'qr'), 'נתונים: כניסה של שחקן חדש נרשמת עם המקור מהקישור (?src=qr)');
+  check(evs.some(e => e.e === 'התחלה' && e.g === 'נכון או לא נכון') && evs.some(e => e.e === 'סיום' && e.g === 'נכון או לא נכון'), 'נתונים: התחלה וסיום משחק נרשמים בשם המשחק');
+  check(evs.length > 0 && evs.every(e => /^[a-z0-9]{6,16}$/.test(e.p)) && got.every(b => !/"name"|"phone"/.test(b)), 'נתונים: אנונימיים, בלי שם או טלפון');
+  await stats.close();
 
   console.log('כללי');
   check(errors.length === 0, 'אין שגיאות JavaScript' + (errors.length ? ': ' + errors.join(' | ') : ''));
