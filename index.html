@@ -160,18 +160,22 @@
     <div class="bar"><button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>תפריט ראשי</button></div>
     <div class="stage wheelstage">
       <span class="eyebrow" style="text-align:center">גלגל המזל של שירנסקי מארח</span>
-      <h2 class="prompt" style="text-align:center" id="w_head">סיבוב אחד, פרס אחד. בהצלחה!</h2>
+      <h2 class="prompt" style="text-align:center" id="w_head">רמה 1 מתוך 4</h2>
+      <p class="wstatus" id="w_status"></p>
       <div class="wheelwrap">
         <svg class="pointer" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 38L6 6h28z"/></svg>
         <div class="wheel" id="w_wheel"></div>
         <button class="hub" id="w_spin">לסובב</button>
       </div>
+      <p class="note wnext" id="w_next"></p>
+      <div id="w_warn" style="display:grid;gap:10px"></div>
       <form class="claim" id="w_form" autocomplete="on">
         <p class="sub" style="text-align:center">לפני הסיבוב: למי נרשום את הפרס?</p>
         <input id="w_name" name="name" placeholder="שם מלא" required autocomplete="name">
         <input id="w_phone" name="tel" type="tel" inputmode="tel" placeholder="טלפון" required autocomplete="tel" dir="ltr">
-        <p class="terms">הפרס נרשם על שמכם ועל הטלפון שלכם, ונשמר אצל שירנסקי מארח רק לצורך מימוש הפרס.</p>
+        <p class="terms">הפרס נרשם על שמכם ועל הטלפון שלכם, ונשמר אצל שירנסקי מארח רק לצורך מימוש הפרס. עד 5 סיבובים לטלפון, וקוד אחד שמשתדרג.</p>
       </form>
+      <p class="note who" id="w_who" hidden>מסובבים בשם <b id="w_whoname"></b> · <button type="button" class="linkbtn" id="w_change">לא אני</button></p>
       <div id="w_reveal" style="display:grid;gap:10px"></div>
       <p class="terms" id="w_terms"></p>
     </div>

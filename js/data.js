@@ -163,21 +163,23 @@ const TF = [
 // --- זוגות מהתפריט, גרסה גדולה: more real dishes (from served menus)
 const DISHES_MEM_BIG = DISHES_MEM.concat(["חציל שחור וטחינה","סלמון בזיגוג מיסו","ארנצ'יני בשר","בורטה ועגבניות","דלעת זהובה ופטה"]);
 
-// --- גלגל המזל. Equal slices; a prize appears on the wheel as many times as its share (20 slices).
-// Same order is used by the Make scenario that draws the prize.
+// --- גלגל המזל המדורג. 20 משבצות שוות; כל פרס מופיע כמספר המשבצות שלו.
+// opens = באיזו רמה המשבצת נפתחת. משבצת שעוד לא נפתחה ריקה ("לא הפעם").
+// רמות: 1–2 משחקים = 1 · 3–5 = 2 · 6–8 = 3 · כל 9 = 4 (הגלגל המלא). ההגרלה עצמה בשרת (tools/stats-apps-script.gs).
 const PRIZES = {
-  K:{label:"5% הנחה",               short:"5%",          slices:6},
-  M:{label:"10% הנחה",              short:"10%",         slices:5},
-  R:{label:"15% הנחה",              short:"15%",         slices:4},
-  T:{label:"20% הנחה",              short:"20%",         slices:2},
-  V:{label:"ארוחה ל-3 במחיר של 2",   short:"3 במחיר 2",   slices:2, fill:"#C9A96E", ink:"#1A1912"},
-  Z:{label:"2 זוגות במחיר של זוג",   short:"2 זוגות במחיר זוג", slices:1, fill:"#93392F", ink:"#F4EEE3"},
+  K:{label:"5% הנחה",               short:"5%",          slices:6, opens:1},
+  M:{label:"10% הנחה",              short:"10%",         slices:5, opens:2},
+  R:{label:"15% הנחה",              short:"15%",         slices:4, opens:3},
+  T:{label:"20% הנחה",              short:"20%",         slices:2, opens:4},
+  V:{label:"ארוחה ל-3 במחיר של 2",   short:"3 במחיר 2",   slices:2, opens:4, fill:"#C9A96E", ink:"#1A1912"},
+  Z:{label:"2 זוגות במחיר של זוג",   short:"2 זוגות במחיר זוג", slices:1, opens:4, fill:"#93392F", ink:"#F4EEE3"},
 };
-// order around the wheel, spread so equal prizes don't touch
+// order around the wheel, spread so equal prizes don't touch. Must match the server.
 const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
+const MAX_SPINS = 5;
 const TALLY_URL = "https://tally.so/r/EkRN1A";
 const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
-// The prize is drawn by Make (not in the browser) and every code is logged in Shiran's private sheet.
-const SPIN_URL = "https://hook.eu1.make.com/i1bwo3cdw4nvplh1rn8atd1nfw4pb85g";
-// Anonymous play statistics (Apps Script web app on the sheet "נתוני משחק – שירנסקי מארח"). Empty = off.
+// Game server: Apps Script web app on the sheet "נתוני משחק – שירנסקי מארח" (code: tools/stats-apps-script.gs).
+// It records anonymous statistics and draws the wheel prize; codes go to Shiran's private sheet "קודי פרסים – שירנסקי מארח".
 const TRACK_URL = "https://script.google.com/macros/s/AKfycbxZaBY3FybRY9mY_kaxy8Q1oxQfdGFDB0w9nBKBqz78L5BeGzRYkXniZeb9wiGFZ6arTw/exec";
+const SPIN_URL = TRACK_URL;

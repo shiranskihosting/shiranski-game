@@ -195,3 +195,10 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 .mute .offi{display:none} .mute.off .on{display:none} .mute.off .offi{display:block} .mute.off{color:var(--muted)}
 /* fireworks overlay */
 .fireworks{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}
+
+/* graded wheel */
+.wstatus{margin:-4px 0 0;text-align:center;color:var(--muted);font-size:14px}
+.wnext{text-align:center;margin:0}
+.reveal.warn{border-color:rgba(224,176,96,.5);background:rgba(224,176,96,.08)}
+.who{text-align:center;margin:0}
+.linkbtn{color:var(--gold);text-decoration:underline;text-underline-offset:3px;font-weight:600}

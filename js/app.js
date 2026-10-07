@@ -1,6 +1,6 @@
 /* ===================== STATE ===================== */
 const KEY = "shiranski-game-v1";
-const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}, prize:null});
+const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}, prize:null, spins:0, who:null});
 let S = FRESH();
 try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = Object.assign(FRESH(), s); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -44,17 +44,26 @@ function totalStars(){ return Object.keys(MAX).reduce((a,k)=>a+(S[k]||0),0); }
 function totalMax(){ return Object.values(MAX).reduce((a,b)=>a+b,0); }
 function catStars(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+S[g.id],0); }
 function catMax(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+MAX[g.id],0); }
-// Everyone who finishes all the games gets to spin (no score threshold).
 function gamesLeft(){ return GAMES.filter(g=>!S.done[g.id]).length; }
-function wheelOpen(){ return gamesLeft()===0; }
+// Graded wheel: the more games finished, the more prize slots are open (both the chance and the prizes grow).
+function gamesDone(){ return GAMES.length - gamesLeft(); }
+function levelFor(n){ return n>=GAMES.length ? 4 : n>=6 ? 3 : n>=3 ? 2 : n>=1 ? 1 : 0; }
+function level(){ return levelFor(gamesDone()); }
+function slotOpen(i, lv){ return PRIZES[WHEEL[i]].opens <= lv; }
+function chance(lv){ return Math.round(WHEEL.filter((k,i)=>slotOpen(i,lv)).length / WHEEL.length * 100); }
+function spinsLeft(){ return Math.max(0, MAX_SPINS - (S.spins||0)); }
+function gamesToNext(){ const n = gamesDone(); return n>=GAMES.length ? 0 : n>=6 ? GAMES.length-n : n>=3 ? 6-n : n>=1 ? 3-n : 1-n; }
+function wheelOpen(){ return level()>=1 && spinsLeft()>0 && !S.redeemed; }
+function spinsWord(n){ return n===1 ? "סיבוב אחד" : n+" סיבובים"; }
 function renderPromo(){
   const n = GAMES.length, d = n - gamesLeft();
   $("promo_bar").style.width = (d/n*100)+"%";
-  $("promo_line").textContent = S.prize ? "זכית: "+PRIZES[S.prize.k].label+" · קוד "+S.prize.code
-    : wheelOpen() ? "סיימת את כל המשחקים! לחצו כאן כדי לסובב את גלגל המזל."
-    : `מסיימים את כל ${n} המשחקים ומסובבים את גלגל המזל. סיימת ${d} מתוך ${n}.`;
+  const lv = level(), prize = S.prize ? " · הפרס שלך: "+PRIZES[S.prize.k].label : "";
+  $("promo_line").textContent = lv===0 ? "מסיימים משחק אחד ופותחים את גלגל המזל. כל משחק נוסף משפר את הסיכוי ואת הפרסים."
+    : spinsLeft()===0 || S.redeemed ? (S.prize ? "הפרס שלך: "+PRIZES[S.prize.k].label+" · קוד "+S.prize.code : "השתמשת בכל הסיבובים.")
+    : `גלגל המזל פתוח · רמה ${lv} מתוך 4 · סיכוי זכייה ${chance(lv)}% · נותרו ${spinsWord(spinsLeft())}${prize}`;
 }
-$("promo").addEventListener("click",e=>{ e.preventDefault(); if(S.prize || wheelOpen()){ openWheel(); } else { toast(gamesLeft()===1 ? "עוד משחק אחד לגלגל המזל" : "עוד "+gamesLeft()+" משחקים לגלגל המזל"); } });
+$("promo").addEventListener("click",e=>{ e.preventDefault(); if(level()>=1 || S.prize){ openWheel(); } else { toast("מסיימים משחק אחד ופותחים את גלגל המזל"); } });
 $("bookBtn").href = TALLY_URL; $("lobby_terms").textContent = "פרסי גלגל המזל: "+PRIZE_TERMS;
 function renderLobby(){
   curCat = null; renderPromo();
@@ -348,34 +357,59 @@ function finishJig(){
 }
 
 
-/* ===================== WHEEL OF FORTUNE ===================== */
-let spinning = false;
-function drawWheel(){
+/* ===================== WHEEL OF FORTUNE (graded) ===================== */
+let spinning = false, armed = false;
+function drawWheel(lv){
   const n = WHEEL.length, R = 150, cx = 160, cy = 160, a = 2*Math.PI/n;
   let svg = `<svg viewBox="0 0 320 320" aria-label="גלגל המזל">`;
   WHEEL.forEach((k,i)=>{
+    const open = slotOpen(i, lv);
     const a0 = -Math.PI/2 - a/2 + i*a, a1 = a0 + a;
     const x0 = cx+R*Math.cos(a0), y0 = cy+R*Math.sin(a0), x1 = cx+R*Math.cos(a1), y1 = cy+R*Math.sin(a1);
-    const fill = PRIZES[k].fill || (i%2 ? "#1F1C19" : "#2A2621");
-    const ink = PRIZES[k].ink || "#F4EEE3";
+    const fill = open ? (PRIZES[k].fill || (i%2 ? "#1F1C19" : "#2A2621")) : "#0E0C0B";
+    const ink = open ? (PRIZES[k].ink || "#F4EEE3") : "rgba(244,238,227,.26)";
     const mid = a0 + a/2, deg = mid*180/Math.PI;
     const tx = cx+R*0.62*Math.cos(mid), ty = cy+R*0.62*Math.sin(mid);
-    svg += `<path d="M${cx} ${cy}L${x0.toFixed(2)} ${y0.toFixed(2)}A${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z" fill="${fill}" stroke="rgba(201,169,110,.55)" stroke-width="1"/>`;
-    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${ink}" font-size="${PRIZES[k].short.length>12?8.6:PRIZES[k].short.length>5?9.5:13}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(deg+(Math.cos(mid)<0?180:0)).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" font-family="Assistant, sans-serif">${PRIZES[k].short}</text>`;
+    const len = PRIZES[k].short.length;
+    svg += `<path class="slot${open?'':' closed'}" d="M${cx} ${cy}L${x0.toFixed(2)} ${y0.toFixed(2)}A${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z" fill="${fill}" stroke="rgba(201,169,110,${open?'.55':'.18'})" stroke-width="1"/>`;
+    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${ink}" font-size="${len>12?8.6:len>5?9.5:13}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(deg+(Math.cos(mid)<0?180:0)).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" font-family="Assistant, sans-serif">${PRIZES[k].short}</text>`;
   });
   svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#C9A96E" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="${R+6}" fill="none" stroke="rgba(201,169,110,.25)" stroke-width="1"/>`;
   for(let i=0;i<n;i++){ const t=-Math.PI/2 - a/2 + i*a; svg+=`<circle cx="${(cx+(R+6)*Math.cos(t)).toFixed(1)}" cy="${(cy+(R+6)*Math.sin(t)).toFixed(1)}" r="2.2" fill="#C9A96E"/>`; }
   $("w_wheel").innerHTML = svg + `</svg>`;
 }
+function wheelStatus(){
+  const lv = level(), left = spinsLeft(), next = gamesToNext();
+  const parts = [`נותרו ${spinsWord(left)} מתוך ${MAX_SPINS}`];
+  if(S.prize) parts.push("הפרס השמור שלך: "+PRIZES[S.prize.k].label);
+  $("w_status").textContent = parts.join(" · ");
+  $("w_next").textContent = lv>=4 ? "זה הגלגל המלא: כל המשבצות פתוחות."
+    : lv===0 ? "מסיימים משחק אחד ופותחים את הגלגל."
+    : `משבצות כהות ריקות ברמה הזו. עוד ${next===1?"משחק אחד":next+" משחקים"} ופותחים את רמה ${lv+1} (סיכוי ${chance(lv+1)}%).`;
+}
+function setHead(){
+  const lv = level();
+  $("w_head").textContent = S.redeemed ? "הפרס שלך כבר מומש" : spinsLeft()===0 ? "השתמשת בכל הסיבובים" : `רמה ${lv} מתוך 4 · סיכוי זכייה ${chance(lv)}%`;
+}
+function renderWho(){
+  const known = !!(S.who && S.who.name);
+  $("w_form").hidden = known || !wheelOpen();
+  $("w_who").hidden = !known || !wheelOpen();
+  if(known) $("w_whoname").textContent = S.who.name;
+}
 function openWheel(){
-  drawWheel(); $("w_terms").textContent = PRIZE_TERMS; $("w_reveal").innerHTML = "";
+  armed = false;
+  const lv = level();
+  drawWheel(lv); $("w_terms").textContent = PRIZE_TERMS; $("w_reveal").innerHTML = ""; $("w_warn").innerHTML = "";
   const w = $("w_wheel"); w.style.transition = "none";
-  $("w_form").hidden = !!S.prize;
-  if(S.prize){ w.style.transform = `rotate(${-S.prize.slot*360/WHEEL.length}deg)`; $("w_spin").disabled = true; $("w_head").textContent = "כבר סובבת. זה הפרס שלך:"; showPrize(); }
-  else { w.style.transform = "rotate(0deg)"; $("w_spin").disabled = false; $("w_head").textContent = "סיבוב אחד, פרס אחד. בהצלחה!"; }
+  w.style.transform = S.prize && S.prize.slot!=null ? `rotate(${-S.prize.slot*360/WHEEL.length}deg)` : "rotate(0deg)";
+  $("w_spin").disabled = !wheelOpen(); $("w_spin").textContent = "לסובב";
+  setHead(); wheelStatus(); renderWho();
+  if(S.prize) showPrize();
   show("wheel");
 }
 $("w_spin").addEventListener("click", spin);
+$("w_change").addEventListener("click", ()=>{ S.who = null; save(); renderWho(); $("w_name").focus(); });
 function tickWhileSpinning(el, ms){
   const n = WHEEL.length, slice = 360/n, end = performance.now()+ms; let last = null, total = 0;
   (function step(){
@@ -385,41 +419,84 @@ function tickWhileSpinning(el, ms){
     if(performance.now()<end) requestAnimationFrame(step);
   })();
 }
+function warnBeforeSpin(){
+  // spinning before the full wheel is allowed, but the player should know what they give up
+  const lv = level(), left = spinsLeft();
+  $("w_reveal").innerHTML = "";
+  $("w_warn").innerHTML = `<div class="reveal warn"><b>${left===1?"זה הסיבוב האחרון שלך.":"נשארו לך "+spinsWord(left)+"."}</b><p>ברמה ${lv} הסיכוי לזכות הוא ${chance(lv)}%. הגלגל המלא, עם 100% זכייה והפרסים הגדולים, נפתח אחרי כל ${GAMES.length} המשחקים. לסובב עכשיו?</p></div><button class="btn ghost" id="w_later">להמשיך לשחק קודם</button>`;
+  $("w_later").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
+  $("w_spin").textContent = "כן, לסובב";
+  armed = true;
+}
 async function spin(){
-  if(spinning || S.prize || !wheelOpen()) return;
-  const name = $("w_name").value.trim(), phone = $("w_phone").value.replace(/[^\d+]/g,"");
-  if(name.length<2 || phone.replace(/\D/g,"").length<9){ toast("צריך שם וטלפון כדי לסובב"); (name.length<2?$("w_name"):$("w_phone")).focus(); return; }
+  if(spinning || !wheelOpen()) return;
+  let name, phone;
+  if(S.who && S.who.name){ name = S.who.name; phone = S.who.phone; }
+  else {
+    name = $("w_name").value.trim(); phone = $("w_phone").value.replace(/[^\d+]/g,"");
+    if(name.length<2 || phone.replace(/\D/g,"").length<9){ toast("צריך שם וטלפון כדי לסובב"); (name.length<2?$("w_name"):$("w_phone")).focus(); return; }
+  }
+  if(level()<4 && !armed){ S.who = {name, phone}; save(); renderWho(); warnBeforeSpin(); return; }
+  armed = false; $("w_warn").innerHTML = ""; $("w_reveal").innerHTML = "";
   spinning = true; $("w_spin").disabled = true; $("w_spin").textContent = "...";
   const w = $("w_wheel"); w.classList.add("waiting");
+  const lv = level();
   let res = null;
   try{
-    const ctrl = new AbortController(); const tm = setTimeout(()=>ctrl.abort(), 20000);
-    const r = await fetch(SPIN_URL+"?name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone), {signal:ctrl.signal});
+    const ctrl = new AbortController(); const tm = setTimeout(()=>ctrl.abort(), 25000);
+    const r = await fetch(SPIN_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({a:"spin", name, phone, games:gamesDone()}), signal:ctrl.signal});
     clearTimeout(tm); res = await r.json();
-    if(!(res && Number.isInteger(res.slot) && WHEEL[res.slot]===res.k && /^SH-[0-9A-F]{6}$/.test(res.code))) res = null;
   }catch(e){ res = null; }
   w.classList.remove("waiting");
-  if(!res){ spinning=false; $("w_spin").disabled=false; $("w_spin").textContent="לסובב"; toast("לא הצלחנו להגריל כרגע. נסו שוב בעוד רגע."); return; }
+  const valid = res && res.ok && Number.isInteger(res.slot) && res.slot>=0 && res.slot<WHEEL.length
+    && (res.win ? WHEEL[res.slot]===res.k : !res.k) && (!res.best || (PRIZES[res.best] && /^SH-[0-9A-F]{6}$/.test(res.code)));
+  if(!valid){
+    spinning = false; $("w_spin").textContent = "לסובב";
+    if(res && res.err==="nospins"){ S.spins = MAX_SPINS; if(res.best) S.prize = {k:res.best, code:res.code}; save(); toast("כבר השתמשת בכל "+MAX_SPINS+" הסיבובים"); openWheel(); return; }
+    if(res && res.err==="redeemed"){ S.redeemed = true; save(); toast("הפרס שלך כבר מומש. המתנה לאירוע אחד בלבד."); openWheel(); return; }
+    $("w_spin").disabled = false;
+    toast("לא הצלחנו להגריל כרגע. נסו שוב בעוד רגע."); return;
+  }
+  S.who = {name, phone};
   const n = WHEEL.length, jitter = (Math.random()-.5) * (360/n) * 0.7;
   const deg = 360*6 - res.slot*360/n + jitter;
   w.style.transition = "none"; w.style.transform = "rotate(0deg)"; void w.offsetWidth;
   w.style.transition = "transform 5.2s cubic-bezier(.12,.62,.08,1)"; w.style.transform = `rotate(${deg}deg)`;
   SFX.whoosh(); tickWhileSpinning(w, 5300);
+  const before = S.prize ? S.prize.k : null;
   setTimeout(()=>{
-    // every win: applause + cheering. Top two prizes (Z, V): festive trumpets; others: the regular fanfare
-    if(res.k==="Z" || res.k==="V") SFX.trumpets(); else SFX.fanfare();
-    SFX.applause(); SFX.cheer(); fireworks(res.k==="Z" ? 5200 : 3800);
-    S.prize = {k:res.k, slot:res.slot, code:res.code, name, at:new Date().toISOString().slice(0,10)}; save(); TRACK.ev("סיבוב", "", PRIZES[res.k].label); TRACK.flush();
-    spinning = false; $("w_spin").textContent = "לסובב"; $("w_form").hidden = true;
-    $("w_head").textContent = "יש לנו זוכה!"; showPrize(); glow($("w_reveal").firstElementChild, true);
+    S.spins = MAX_SPINS - res.spinsLeft;
+    if(res.best) S.prize = {k:res.best, code:res.code, slot:res.best===res.k ? res.slot : (S.prize && S.prize.slot), at:new Date().toISOString().slice(0,10)};
+    save();
+    TRACK.ev("סיבוב", "רמה "+lv, res.win ? PRIZES[res.k].label : "ריק"); TRACK.flush();
+    spinning = false; $("w_spin").textContent = "לסובב"; $("w_spin").disabled = !wheelOpen();
+    renderWho(); wheelStatus();
+    const left = spinsLeft(), more = left>0 && lv<4 ? " כל משחק נוסף פותח עוד משבצות פרס." : "";
+    if(res.win){
+      // every win: applause + cheering. Top two prizes (Z, V): festive trumpets; others: the regular fanfare
+      if(res.k==="Z" || res.k==="V") SFX.trumpets(); else SFX.fanfare();
+      SFX.applause(); SFX.cheer(); fireworks(res.k==="Z" ? 5200 : 3800);
+      const better = res.best===res.k && before!==res.k;
+      $("w_head").textContent = better ? (before ? "שדרוג! הפרס שלך עלה" : "יש לנו זוכה!") : "זכית, והפרס השמור שלך עדיין גבוה יותר";
+      showPrize(better ? "" : `בסיבוב הזה יצא ${PRIZES[res.k].label}. נשאר לך הפרס הגבוה.`+more);
+    } else {
+      SFX.bad();
+      $("w_head").textContent = "לא הפעם";
+      if(S.prize) showPrize("הפרס השמור שלך לא נפגע."+more);
+      else $("w_reveal").innerHTML = `<div class="reveal"><b>החץ נעצר על משבצת ריקה.</b><p>${left>0 ? "נשארו לך "+spinsWord(left)+"."+more : "השתמשת בכל הסיבובים."}</p></div>`
+        + (left>0 && lv<4 ? `<button class="btn primary" id="w_play">להמשיך לשחק ולשדרג את הגלגל</button>` : "");
+      if($("w_play")) $("w_play").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
+    }
   }, 5400);
 }
-function showPrize(){
-  const P = PRIZES[S.prize.k];
-  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span><p>כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות.</p></div>
+function showPrize(note){
+  const P = PRIZES[S.prize.k], left = spinsLeft(), lv = level();
+  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span>${note?`<p>${note}</p>`:""}<p>כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות. קוד אחד לשחקן: אם תזכו בפרס גבוה יותר, הקוד נשאר והפרס משתדרג.</p></div>
     <button class="btn ghost" id="w_copy">להעתיק את הקוד</button>
+    ${left>0 && lv<4 ? `<button class="btn primary" id="w_play">להמשיך לשחק ולשדרג את הגלגל</button>` : ""}
     <a class="btn gold" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
   $("w_copy").addEventListener("click",()=>{ navigator.clipboard.writeText(S.prize.code).then(()=>toast("הקוד הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); });
+  if($("w_play")) $("w_play").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
 }
 
 /* ===================== RESULT ===================== */
@@ -436,19 +513,19 @@ function renderResult(){
   $("r_title").textContent = title; $("r_score").textContent = score; $("r_max").textContent = max;
   const played = GAMES.filter(g=>S.done[g.id]).length;
   $("r_line").textContent = played===0 ? "עוד לא שיחקת. הכוכבים מחכים בתפריט הראשי." : played<GAMES.length ? `שיחקת ${played} מתוך ${GAMES.length} משחקים. אפשר להמשיך לאסוף.` : "שיחקת בכל המשחקים.";
-  const left = gamesLeft();
-  $("r_wheel").innerHTML = S.prize ? `<button class="btn gold" id="r_spin">לראות את הפרס שלי</button>`
-    : wheelOpen() ? `<div class="reveal"><b>סיימת את כל המשחקים! גלגל המזל פתוח בשבילך.</b></div><button class="btn gold" id="r_spin">לסובב את גלגל המזל</button>`
-    : `<p class="note">${left===1?"עוד משחק אחד":"עוד "+left+" משחקים"} ומסובבים את גלגל המזל.</p>`;
+  const lv = level();
+  $("r_wheel").innerHTML = wheelOpen() ? `<div class="reveal"><b>גלגל המזל פתוח: רמה ${lv} מתוך 4, סיכוי זכייה ${chance(lv)}%.</b><p>נותרו ${spinsWord(spinsLeft())}.${lv<4?" כל משחק נוסף משפר את הסיכוי ואת הפרסים.":""}</p></div><button class="btn gold" id="r_spin">לגלגל המזל</button>`
+    : S.prize ? `<button class="btn gold" id="r_spin">לראות את הפרס שלי</button>`
+    : lv===0 ? `<p class="note">מסיימים משחק אחד ופותחים את גלגל המזל.</p>` : "";
   if($("r_spin")) $("r_spin").addEventListener("click", openWheel);
-  if(!S.prize && wheelOpen()){ SFX.fanfare(); fireworks(2600); }
+  if(wheelOpen() && lv===4 && !S.prize){ SFX.fanfare(); fireworks(2600); }
   $("r_tags").innerHTML = CATS.map(c=>{ const d=GAMES.some(g=>g.cat===c.id&&S.done[g.id]); return `<span class="tag ${d?'on':''}">${c.name} ${d?'★'+catStars(c.id):''}</span>`; }).join("");
   const text = `${title} 🍽️\n${score} מתוך ${max} כוכבים במשחק "המטבח של ${BRAND}".\nתנסו גם: ${location.href.split('#')[0]}`;
   $("shareBtn").href = "https://wa.me/?text="+encodeURIComponent(text);
   $("copyBtn").onclick = ()=>{ navigator.clipboard.writeText(text).then(()=>toast("הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); };
   show("result");
 }
-$("resetBtn").addEventListener("click",()=>{ const keep=S.prize; S=FRESH(); S.prize=keep; save(); renderLobby(); show("lobby"); });
+$("resetBtn").addEventListener("click",()=>{ const keep={prize:S.prize, spins:S.spins, who:S.who, redeemed:S.redeemed}; S=Object.assign(FRESH(), keep); save(); renderLobby(); show("lobby"); });
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
 
 /* statistics: booking and sharing clicks */

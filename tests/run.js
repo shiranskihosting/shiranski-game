@@ -23,7 +23,7 @@ const big = D.PHOTOS.filter(p => fs.existsSync(path.join(ROOT, p.src)) && fs.sta
 check(big.length === 0, 'תמונות: כולן מתחת ל-300KB' + (big.length ? ' (' + big.map(p => p.src).join(', ') + ')' : ''));
 const cnt = {}; D.WHEEL.forEach(k => cnt[k] = (cnt[k] || 0) + 1);
 check(D.WHEEL.length === 20 && Object.keys(D.PRIZES).every(k => D.PRIZES[k].slices === cnt[k]), 'גלגל: 20 משבצות ומספר המשבצות של כל פרס תואם');
-check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לסדר ב-Make');
+check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: 20 משבצות בסדר הקבוע');
 const allText = fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + fs.readFileSync(path.join(ROOT, 'js/app.js'), 'utf8') + fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 check(!/שירנסקי(?!\s*מארח)(?![-\w])/.test(allText.replace(/shiranski/gi, '')), '"שירנסקי מארח" תמיד בשם המלא');
 const og = path.join(ROOT, 'img/og.jpg');
@@ -31,6 +31,7 @@ check(fs.existsSync(og) && fs.statSync(og).size < 300 * 1024, 'תצוגה מקד
 const head = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 check(/og:image" content="https:\/\/shiranskihosting\.github\.io\/shiranski-game\/img\/og\.jpg"/.test(head) && /og:title/.test(head) && /og:description/.test(head), 'תצוגה מקדימה לוואטסאפ: תגיות og במקום');
 for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', 'img/ui/pairs.svg']) check(fs.existsSync(path.join(ROOT, f)), 'איור קיים: ' + f);
+require('./server')(check);
 
 // ---------- 2. Playing the game in a phone-size browser ----------
 (async () => {
@@ -38,7 +39,13 @@ for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', '
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.route('https://hook.eu1.make.com/**', r => r.fulfill({ status: 200, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: JSON.stringify({ slot: 11, k: 'Z', code: 'SH-7E57A1' }) }));
+  // fake game server: statistics → 'ok', spin → the next prepared answer
+  let nextSpin = null; const spinBodies = [];
+  await page.route('https://script.google.com/**', r => {
+    const body = r.request().postData() || '';
+    if (body.includes('"a":"spin"')) { spinBodies.push(JSON.parse(body)); return r.fulfill({ status: 200, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: JSON.stringify(nextSpin) }); }
+    r.fulfill({ status: 200, body: 'ok' });
+  });
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const width = () => page.evaluate(() => document.documentElement.scrollWidth);
   const visible = () => page.evaluate(() => [...document.querySelectorAll('.screen')].find(s => !s.hidden).id);
@@ -92,24 +99,45 @@ for (const f of ['img/ui/trivia.svg', 'img/ui/flavor.svg', 'img/ui/photo.svg', '
   await play('pairs', 'memory', async () => check(await pairs() === 12, 'זוגות מהתפריט: 12 קלפים'));
   await play('pairs', 'memory2', async () => check(await pairs() === 20, 'שולחן גדול: 20 קלפים'));
 
-  console.log('גלגל המזל');
-  await page.evaluate(() => { localStorage.clear(); S = FRESH(); for (const g of GAMES.slice(1)) S.done[g.id] = true; save(); renderLobby(); });
-  await page.click('#finishBtn');
-  check(await page.locator('#r_spin').count() === 0, 'מסך תוצאה: לפני שמסיימים את כל המשחקים הגלגל סגור');
-  await page.click('#result [data-back]');
-  await page.evaluate(() => { for (const g of GAMES) S.done[g.id] = true; save(); renderLobby(); });
+  console.log('גלגל המזל המדורג');
+  check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לשרת');
+  const setDone = n => page.evaluate(n => { for (const [i, g] of GAMES.entries()) S.done[g.id] = i < n; save(); renderLobby(); show('lobby'); }, n);
+  await page.evaluate(() => { localStorage.clear(); S = FRESH(); save(); renderLobby(); show('lobby'); });
   check((await page.textContent('#promo')).includes('שחקו כדי לקבל ממני מתנה'), 'פרומו: "שחקו כדי לקבל ממני מתנה!"');
+  check((await page.textContent('#promo_line')).includes('מסיימים משחק אחד'), 'פרומו: לפני משחק ראשון הגלגל סגור');
   await page.click('#finishBtn');
-  check(await page.locator('#r_spin').count() === 1, 'מסך תוצאה: מי שסיים את כל המשחקים מקבל את הגלגל, בלי קשר לניקוד');
-  await page.click('#r_spin');
+  check(await page.locator('#r_spin').count() === 0, 'מסך תוצאה: בלי משחק אחד אין גלגל');
+  await page.click('#result [data-back]');
+  await setDone(1);
+  check(/רמה 1 .*30%.*5 סיבובים/.test(await page.textContent('#promo_line')), 'פרומו: אחרי משחק אחד – רמה 1, סיכוי 30%, 5 סיבובים');
+  await page.click('#promo');
+  check(await visible() === 'wheel' && await page.locator('#w_wheel .slot.closed').count() === 14, 'גלגל רמה 1: 14 משבצות ריקות (כהות)');
+  check((await page.textContent('#w_next')).includes('עוד 2 משחקים'), 'גלגל: כתוב כמה משחקים עד הרמה הבאה');
   await page.click('#w_spin');
-  check(await page.evaluate(() => S.prize) === null, 'גלגל: אי אפשר לסובב בלי שם וטלפון');
+  check(await page.evaluate(() => S.spins) === 0 && spinBodies.length === 0, 'גלגל: אי אפשר לסובב בלי שם וטלפון');
   await page.fill('#w_name', 'בדיקה אוטומטית'); await page.fill('#w_phone', '0500000000');
+  await page.click('#w_spin');
+  check(spinBodies.length === 0 && (await page.textContent('#w_warn')).includes('100%'), 'גלגל: לפני סיבוב מוקדם מופיעה אזהרה, בלי סיבוב');
+  nextSpin = { ok: true, slot: 1, win: false, k: '', best: '', code: '', upgraded: false, spinsLeft: 4, level: 1 };
+  await page.click('#w_spin'); await page.waitForTimeout(6000);
+  check(spinBodies.length === 1 && spinBodies[0].games === 1 && spinBodies[0].phone === '0500000000', 'גלגל: השרת מקבל שם, טלפון ומספר משחקים');
+  check((await page.textContent('#w_head')).includes('לא הפעם') && await page.evaluate(() => S.spins) === 1 && (await page.textContent('#w_status')).includes('4 סיבובים'), 'גלגל: משבצת ריקה – "לא הפעם", נשארו 4');
+  await page.click('#wheel [data-back]');
+  await setDone(9);
+  await page.click('#promo');
+  check(await page.locator('#w_wheel .slot.closed').count() === 0 && (await page.textContent('#w_head')).includes('100%'), 'גלגל מלא אחרי 9 משחקים: כל המשבצות פתוחות, 100%');
+  check(await page.locator('#w_form').isHidden(), 'גלגל: השם והטלפון נשמרים לסיבוב הבא');
+  nextSpin = { ok: true, slot: 11, win: true, k: 'Z', best: 'Z', code: 'SH-7E57A1', upgraded: false, spinsLeft: 3, level: 4 };
   await page.click('#w_spin'); await page.waitForTimeout(6000);
   const prize = await page.evaluate(() => S.prize);
-  check(prize && prize.k === 'Z' && prize.code === 'SH-7E57A1', 'גלגל: הפרס והקוד מגיעים מ-Make ונשמרים');
-  check(await width() <= 390, 'גלגל: נכנס למסך');
-  check((await page.textContent('#w_reveal')).includes('SH-7E57A1'), 'גלגל: הקוד מוצג ללקוח');
+  check(spinBodies.length === 2 && prize && prize.k === 'Z' && prize.code === 'SH-7E57A1', 'גלגל: ברמה 4 בלי אזהרה; הפרס והקוד מהשרת נשמרים');
+  check((await page.textContent('#w_reveal')).includes('SH-7E57A1') && await width() <= 390, 'גלגל: הקוד מוצג ללקוח ונכנס למסך');
+  nextSpin = { ok: true, slot: 0, win: true, k: 'K', best: 'Z', code: 'SH-7E57A1', upgraded: false, spinsLeft: 2, level: 4 };
+  await page.click('#w_spin'); await page.waitForTimeout(6000);
+  check(await page.evaluate(() => S.prize.k) === 'Z' && (await page.textContent('#w_reveal')).includes('נשאר לך הפרס הגבוה'), 'גלגל: פרס נמוך יותר לא מחליף את הפרס השמור');
+  nextSpin = { ok: false, err: 'nospins', best: 'Z', code: 'SH-7E57A1', spinsLeft: 0, level: 4 };
+  await page.click('#w_spin'); await page.waitForTimeout(600);
+  check(await page.evaluate(() => S.spins) === 5 && await page.isDisabled('#w_spin'), 'גלגל: אחרי 5 סיבובים הכפתור נסגר');
 
   console.log('נתונים סטטיסטיים');
   check(D.TRACK_URL === '' || /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(D.TRACK_URL), 'נתונים: כתובת הגיליון ריקה או כתובת Apps Script תקינה');
