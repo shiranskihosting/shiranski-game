@@ -219,3 +219,6 @@ h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.15;ma
 @media (prefers-reduced-motion:reduce){.promo-ico{animation:none}}
 .reveal[hidden]{display:none}
 .btn.start{display:flex;width:100%}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--fg);cursor:pointer;line-height:1.4}
+.consent input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--gold)}
+.consent[hidden]{display:none}

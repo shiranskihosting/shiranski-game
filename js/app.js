@@ -449,6 +449,9 @@ function renderWho(){
   $("w_form").hidden = known || !wheelOpen();
   $("w_who").hidden = !known || !wheelOpen();
   if(known) $("w_whoname").textContent = S.who.name;
+  // marketing consent: never ticked in advance; once given it stays, and the box is not shown again
+  const ask = wheelOpen() && !(S.who && S.who.consent);
+  $("w_consentbox").hidden = !ask; $("w_privacy").hidden = !ask;
 }
 function openWheel(){
   armed = false;
@@ -462,7 +465,7 @@ function openWheel(){
   show("wheel");
 }
 $("w_spin").addEventListener("click", spin);
-$("w_change").addEventListener("click", ()=>{ S.who = null; save(); renderWho(); $("w_name").focus(); });
+$("w_change").addEventListener("click", ()=>{ S.who = null; save(); $("w_consent").checked = false; renderWho(); $("w_name").focus(); });
 function tickWhileSpinning(el, ms){
   const n = WHEEL.length, slice = 360/n, end = performance.now()+ms; let last = null, total = 0;
   (function step(){
@@ -489,7 +492,8 @@ async function spin(){
     name = $("w_name").value.trim(); phone = $("w_phone").value.replace(/[^\d+]/g,"");
     if(name.length<2 || phone.replace(/\D/g,"").length<9){ toast("צריך שם וטלפון כדי לסובב"); (name.length<2?$("w_name"):$("w_phone")).focus(); return; }
   }
-  if(level()<4 && !armed){ S.who = {name, phone}; save(); renderWho(); warnBeforeSpin(); return; }
+  const consent = !!((S.who && S.who.consent) || $("w_consent").checked);
+  if(level()<4 && !armed){ S.who = {name, phone, consent}; save(); renderWho(); warnBeforeSpin(); return; }
   armed = false; $("w_warn").innerHTML = ""; $("w_reveal").innerHTML = "";
   spinning = true; $("w_spin").disabled = true; $("w_spin").textContent = "...";
   const w = $("w_wheel"); w.classList.add("waiting");
@@ -497,7 +501,7 @@ async function spin(){
   let res = null;
   try{
     const ctrl = new AbortController(); const tm = setTimeout(()=>ctrl.abort(), 25000);
-    const r = await fetch(SPIN_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({a:"spin", name, phone, games:gamesDone()}), signal:ctrl.signal});
+    const r = await fetch(SPIN_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({a:"spin", name, phone, games:gamesDone(), consent, src:TRACK.src}), signal:ctrl.signal});
     clearTimeout(tm); res = await r.json();
   }catch(e){ res = null; }
   w.classList.remove("waiting");
@@ -510,7 +514,7 @@ async function spin(){
     $("w_spin").disabled = false;
     toast("לא הצלחנו להגריל כרגע. נסו שוב בעוד רגע."); return;
   }
-  S.who = {name, phone};
+  S.who = {name, phone, consent};
   const n = WHEEL.length, jitter = (Math.random()-.5) * (360/n) * 0.7;
   const deg = 360*6 - res.slot*360/n + jitter;
   w.style.transition = "none"; w.style.transform = "rotate(0deg)"; void w.offsetWidth;

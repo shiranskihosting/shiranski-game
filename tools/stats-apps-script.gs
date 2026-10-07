@@ -15,7 +15,7 @@ const EVENTS = ['כניסה', 'התחלה', 'סיום', 'גלגל', 'סיבוב'
 const MAX_EVENTS = 40;
 
 const CODES_ID = '1l9FRHLbs9lEVBGqEiRxXD4J1mYrsHS5vKIpebmWlO3A'; // קודי פרסים – שירנסקי מארח
-const CODES_TAB = 'Untitled';      // A:H נקראות ע"י "בודק קודי פרסים": תאריך, שעה, שם, טלפון, קוד, פרס, סטטוס, הערות
+const CODES_TAB = 'Untitled';      // A:H נקראות ע"י "בודק קודי פרסים": תאריך, שעה, שם, טלפון, קוד, פרס, סטטוס, הערות · I הסכמה לדיוור · J מקור
 const SPINS_TAB = 'סיבובים';        // יומן של כל סיבוב, נוצר לבד
 
 // חייב להיות זהה ל-WHEEL ב-js/data.js (הבדיקה האוטומטית משווה)
@@ -84,6 +84,8 @@ function spin(body) {
   const name = clean(body.name, 60);
   const phone = digits(body.phone).slice(0, 15);
   const level = levelFor(body.games);
+  const consent = body.consent === true;           // תיבת "אשמח לקבל עדכונים" (לא מסומנת מראש)
+  const src = clean(body.src, 24) || 'ישיר';
   if (name.length < 2 || phone.length < 9) return {ok: false, err: 'details'};
   if (level < 1) return {ok: false, err: 'locked'};
   try {
@@ -93,7 +95,7 @@ function spin(body) {
       let log = book.getSheetByName(SPINS_TAB);
       if (!log) {
         log = book.insertSheet(SPINS_TAB);
-        log.appendRow(['תאריך', 'שעה', 'שם', 'טלפון', 'רמה', 'משחקים', 'יצא', 'פרס בסיבוב', 'הפרס השמור', 'קוד']);
+        log.appendRow(['תאריך', 'שעה', 'שם', 'טלפון', 'רמה', 'משחקים', 'יצא', 'פרס בסיבוב', 'הפרס השמור', 'קוד', 'הסכמה לדיוור', 'מקור']);
         log.setFrozenRows(1);
       }
       // how many spins this phone already used
@@ -101,7 +103,7 @@ function spin(body) {
       const used = logVals.filter(r => digits(r[0]) === phone).length;
       // this phone's prize row (one code per player)
       const last = codes.getLastRow();
-      const vals = last > 1 ? codes.getRange(2, 1, last - 1, 8).getValues() : [];
+      const vals = last > 1 ? codes.getRange(2, 1, last - 1, 10).getValues() : [];
       let rowIdx = -1;
       for (let i = vals.length - 1; i >= 0; i--) if (digits(vals[i][3]) === phone) { rowIdx = i; break; }
       const row = rowIdx >= 0 ? vals[rowIdx] : null;
@@ -129,11 +131,13 @@ function spin(body) {
           codes.getRange(rowIdx + 2, 8).setValue((note ? note + ' · ' : '') + 'שודרג מ-' + LABEL[bestK] + ' ב-' + date);
         } else {
           newCodeVal = newCode();
-          codes.appendRow([date, time, name, "'" + phone, newCodeVal, LABEL[k], 'חדש', '']);
+          codes.appendRow([date, time, name, "'" + phone, newCodeVal, LABEL[k], 'חדש', '', consent ? 'כן (' + date + ')' : 'לא', src]);
         }
       }
+      // consent given now (or on an earlier, empty spin) is written on the prize row too; it is never removed from here
+      if (row && consent && String(row[8]).indexOf('כן') !== 0) codes.getRange(rowIdx + 2, 9).setValue('כן (' + date + ')');
       log.appendRow([date, time, name, "'" + phone, level, Math.floor(Number(body.games) || 0),
-        win ? 'זכייה' : 'ריק', win ? LABEL[k] : '', newBest ? LABEL[newBest] : '', newCodeVal]);
+        win ? 'זכייה' : 'ריק', win ? LABEL[k] : '', newBest ? LABEL[newBest] : '', newCodeVal, consent ? 'כן' : 'לא', src]);
       return {ok: true, slot: slot, win: win, k: k, best: newBest, code: newCodeVal, upgraded: upgraded,
         spinsLeft: MAX_SPINS - used - 1, level: level};
     });

@@ -44,7 +44,7 @@ module.exports = function serverChecks(check) {
   };
   const slotOf = k => A.WHEEL.indexOf(k);
   const at = slot => { rand = (slot + 0.5) / 20; };
-  const go = (games, phone = '050-1234567') => A.spin({ a: 'spin', name: 'בדיקה', phone, games });
+  const go = (games, phone = '050-1234567', consent = false, src = 'qr') => A.spin({ a: 'spin', name: 'בדיקה', phone, games, consent, src });
 
   console.log('שרת הגלגל');
   check(src.includes("'" + 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M' + "'"), 'שרת: סדר המשבצות זהה למשחק');
@@ -61,9 +61,11 @@ module.exports = function serverChecks(check) {
   check(r.ok && !r.win && r.spinsLeft === 4 && !r.code && tabs['Untitled'].data.length === 1, 'שרת: ברמה 1 משבצת 10% ריקה, בלי קוד, נשארו 4');
   at(slotOf('K')); r = go(2);
   check(r.ok && r.win && r.k === 'K' && /^SH-[0-9A-F]{6}$/.test(r.code) && tabs['Untitled'].data.length === 2, 'שרת: זכייה ראשונה יוצרת קוד ושורה בגיליון');
+  check(tabs['Untitled'].data[1][8] === 'לא' && tabs['Untitled'].data[1][9] === 'qr', 'שרת: בלי סימון אין הסכמה לדיוור; המקור נשמר');
   const code = r.code;
-  at(slotOf('R')); r = go(6);
+  at(slotOf('R')); r = go(6, '050-1234567', true);
   check(r.ok && r.win && r.best === 'R' && r.upgraded && r.code === code && tabs['Untitled'].data[1][5] === '15% הנחה', 'שרת: פרס גבוה יותר משדרג את אותו קוד');
+  check(tabs['Untitled'].data[1][8].startsWith('כן') && tabs['סיבובים'].data[3][10] === 'כן', 'שרת: הסכמה שניתנה בסיבוב מאוחר נרשמת בשורת הפרס וביומן');
   at(slotOf('K')); r = go(9, '972501234567');
   check(r.ok && r.win && r.best === 'R' && !r.upgraded && tabs['Untitled'].data[1][5] === '15% הנחה', 'שרת: פרס נמוך יותר לא מוריד את הפרס (גם עם 972)');
   at(slotOf('Z')); r = go(9);
