@@ -1,4 +1,6 @@
 /* ===================== STATE ===================== */
+// test helper: ?reset=1 wipes everything this phone remembers (stars, prize, spins, name) and reloads clean
+try{ if(new URLSearchParams(location.search).get("reset")==="1"){ localStorage.clear(); location.replace(location.pathname); } }catch(e){}
 const KEY = "shiranski-game-v1";
 const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, jigsaw:0, done:{}, prize:null, spins:0, who:null, season:{}});
 let S = FRESH();
