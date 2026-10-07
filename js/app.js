@@ -1,6 +1,6 @@
 /* ===================== STATE ===================== */
 const KEY = "shiranski-game-v1";
-const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}, prize:null, spins:0, who:null});
+const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}, prize:null, spins:0, who:null, season:{}});
 let S = FRESH();
 try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = Object.assign(FRESH(), s); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -72,8 +72,45 @@ function renderStart(){
   else if(wheelOpen()){ btn.hidden = false; btn.textContent = "לגלגל המזל"; btn.onclick = openWheel; }
   else btn.hidden = true;
 }
+/* ===================== SEASONAL SET (limited time) ===================== */
+function todayISO(){ const d = new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function activeSeason(){
+  let preview = null; try{ preview = new URLSearchParams(location.search).get("season"); }catch(e){}
+  const t = window.TODAY_OVERRIDE || todayISO();
+  return SEASONS.find(x=>x.id===preview) || SEASONS.find(x=>t>=x.from && t<=x.to) || null;
+}
+function renderSeason(){
+  const se = activeSeason(), box = $("season");
+  if(!se){ box.innerHTML = ""; return; }
+  const got = S.season && S.season[se.id];
+  box.innerHTML = `<button class="season" id="seasonBtn" type="button">
+    <span class="season-tag">לזמן מוגבל · עד ${se.until}</span>
+    <b>${se.name}</b><span>${se.desc}</span>
+    <span class="season-meta">${got!=null ? `★ ${got}/${se.items.length} · ${se.badge.name}` : `${se.items.length} משפטים · תג וסוד מהמטבח`}</span>
+  </button>`;
+  $("seasonBtn").addEventListener("click",()=>{ curCat = null; curGame = null; TRACK.ev("התחלה", se.name); startTF(se); });
+}
+function finishSeason(se, score){
+  const first = !(S.season && S.season[se.id]!=null);
+  S.season = S.season || {}; S.season[se.id] = Math.max(S.season[se.id]||0, score); save();
+  TRACK.ev("סיום", se.name, score);
+  const max = se.items.length, r = score/max;
+  $("d_game").textContent = se.name;
+  $("d_title").textContent = r>=.9 ? "מושלם!" : r>=.6 ? "יפה מאוד!" : "סיימת!";
+  $("d_max").textContent = max; $("d_note").textContent = "סט לזמן מוגבל. הוא לא משנה את גלגל המזל.";
+  $("d_wheel").hidden = true; $("d_wheel").innerHTML = "";
+  $("d_badge").innerHTML = `<span class="eyebrow">${first ? "תג חדש" : "התג שלך"}</span><b class="badge-name">${se.badge.name}</b><p class="secret"><b>סוד מהמטבח:</b> ${se.badge.secret}</p>`;
+  $("d_badge").hidden = false;
+  const nx = nextGame();
+  $("d_actions").innerHTML = (nx ? `<button class="btn primary" id="d_next">למשחק הבא: ${nx.name} · ${nx.time}</button>` : "") + `<button class="btn ghost" id="d_back">לתפריט הראשי</button>`;
+  if($("d_next")) $("d_next").addEventListener("click",()=>{ curCat = nx.cat; start(nx.id); });
+  $("d_back").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
+  show("done");
+  $("d_stars").textContent = 0; setTimeout(()=>countUp($("d_stars"), score), 250);
+  SFX.done(); if(first) setTimeout(()=>{ SFX.fanfare(); if(!reduceMotion()) fireworks(1800); }, 500);
+}
 function renderLobby(){
-  curCat = null; renderPromo(); renderStart();
+  curCat = null; renderPromo(); renderStart(); renderSeason();
   $("gamelist").innerHTML = CATS.map(c=>{
     const n = GAMES.filter(g=>g.cat===c.id).length, done = GAMES.filter(g=>g.cat===c.id && S.done[g.id]).length;
     const pct = Math.round(catStars(c.id)/catMax(c.id)*100);
@@ -315,15 +352,16 @@ function renderZoom(){
 
 /* ===================== TRUE / FALSE (timed) ===================== */
 const TF_N = 10, TF_SEC = 10;
-let f = {i:0, score:0, set:[], timer:null, left:0};
-function startTF(){
+let f = {i:0, score:0, set:[], timer:null, left:0, season:null};
+function startTF(season){
   clearInterval(f.timer);
-  f = {i:0, score:0, set:shuffle(TF).slice(0,TF_N), timer:null, left:0};
+  f = {i:0, score:0, set: season ? season.items.slice() : shuffle(TF).slice(0,TF_N), timer:null, left:0, season: season||null};
+  $("f_name").textContent = season ? season.name : "נכון או לא נכון"; $("f_tot").textContent = f.set.length;
   show("tf"); renderTF();
 }
 function renderTF(){
   const r = f.set[f.i];
-  $("f_n").textContent = f.i+1; $("f_prog").style.width = (f.i/TF_N*100)+"%"; setStars("f", f.score);
+  $("f_n").textContent = f.i+1; $("f_prog").style.width = (f.i/f.set.length*100)+"%"; setStars("f", f.score);
   $("f_q").textContent = r.s; $("f_reveal").innerHTML = "";
   $("f_choices").innerHTML = `<button class="choice tfbtn" data-v="1">נכון</button><button class="choice tfbtn" data-v="0">לא נכון</button>`;
   f.left = TF_SEC; $("f_time").style.transition="none"; $("f_time").style.width="100%"; void $("f_time").offsetWidth;
@@ -341,9 +379,9 @@ function answerTF(btn){
   $("f_choices").querySelectorAll(".tfbtn").forEach(x=>{ x.disabled=true; if((x.dataset.v==="1")===r.t) x.classList.add("ok"); });
   if(good){ f.score++; glow(btn); } else { if(btn) btn.classList.add("bad"); SFX.bad(); }
   setStars("f", f.score);
-  const last = f.i===TF_N-1;
+  const last = f.i===f.set.length-1;
   $("f_reveal").innerHTML = `<div class="reveal"><b>${!btn?"נגמר הזמן.":good?"נכון!":"לא בדיוק."} ${r.t?"זה נכון.":"זה לא נכון."}</b><p>${r.why}</p></div><button class="btn primary" id="f_next">${last?"לסיום המשחק":"למשפט הבא"}</button>`;
-  $("f_next").addEventListener("click",()=>{ if(last){ S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); finishGame("tf", f.score); } else { f.i++; renderTF(); } });
+  $("f_next").addEventListener("click",()=>{ if(last){ if(f.season){ finishSeason(f.season, f.score); } else { S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); finishGame("tf", f.score); } } else { f.i++; renderTF(); } });
 }
 
 /* ===================== ODD ONE OUT ===================== */
@@ -655,7 +693,7 @@ function renderResult(){
   $("copyBtn").onclick = ()=>{ navigator.clipboard.writeText(text).then(()=>toast("הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); };
   show("result");
 }
-$("resetBtn").addEventListener("click",()=>{ const keep={prize:S.prize, spins:S.spins, who:S.who, redeemed:S.redeemed}; S=Object.assign(FRESH(), keep); save(); renderLobby(); show("lobby"); });
+$("resetBtn").addEventListener("click",()=>{ const keep={prize:S.prize, spins:S.spins, who:S.who, redeemed:S.redeemed, season:S.season}; S=Object.assign(FRESH(), keep); save(); renderLobby(); show("lobby"); });
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1600); }
 
 /* statistics: booking and sharing clicks */

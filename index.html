@@ -35,6 +35,7 @@
       <span class="promo-txt"><b>שחקו כדי לקבל ממני מתנה!</b><span id="promo_line">מסיימים את כל המשחקים ומסובבים את גלגל המזל.</span><span class="promo-bar"><i id="promo_bar"></i></span></span>
     </a>
     <button class="btn gold start" id="startBtn" type="button">להתחיל לשחק</button>
+    <div id="season"></div>
     <div class="tiles" id="gamelist"></div>
     <div class="finish">
       <button class="btn ghost" id="finishBtn">לתוצאה ולשיתוף</button>
@@ -123,7 +124,7 @@
     <div class="bar"><button class="back" data-backcat><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>חזרה</button><span class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="f_stars">0</span></span></div>
     <div class="stage">
       <div class="progress"><i id="f_prog"></i></div>
-      <p class="sub">נכון או לא נכון · <span id="f_n">1</span> מתוך 10</p>
+      <p class="sub"><span id="f_name">נכון או לא נכון</span> · <span id="f_n">1</span> מתוך <span id="f_tot">10</span></p>
       <div class="timer"><i id="f_time"></i><span id="f_sec">10</span></div>
       <h2 class="prompt" id="f_q"></h2>
       <div class="choices tfrow" id="f_choices"></div>

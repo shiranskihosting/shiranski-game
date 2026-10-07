@@ -9,7 +9,7 @@ const check = (ok, msg) => { if (!ok) fails.push(msg); console.log((ok ? '  ✓ 
 // ---------- 1. Content checks (no browser) ----------
 console.log('תוכן');
 const ctx = { console }; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL,TRACK_URL,BADGES,GAME_ORDER};', ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL,TRACK_URL,BADGES,GAME_ORDER,SEASONS};', ctx);
 const D = ctx.D;
 check(D.BRIDGE.length >= 20, `הגשר: לפחות 20 מנות (${D.BRIDGE.length})`);
 check(D.BRIDGE.every(r => r.opts.includes(r.ok) && new Set(r.opts).size === 4), 'הגשר: בכל מנה 4 אפשרויות שונות והתשובה ביניהן');
@@ -177,6 +177,30 @@ require('./server')(check);
   check(evs.some(e => e.e === 'התחלה' && e.g === 'נכון או לא נכון') && evs.some(e => e.e === 'סיום' && e.g === 'נכון או לא נכון'), 'נתונים: התחלה וסיום משחק נרשמים בשם המשחק');
   check(evs.length > 0 && evs.every(e => /^[a-z0-9]{6,16}$/.test(e.p)) && got.every(b => !/"name"|"phone"/.test(b)), 'נתונים: אנונימיים, בלי שם או טלפון');
   await stats.close();
+
+  console.log('סט עונתי');
+  check(D.SEASONS.every(x => x.items.length >= 6 && x.items.every(i => typeof i.t === 'boolean' && i.s && i.why) && x.from <= x.to && x.badge && x.badge.secret), 'סט עונתי: תוכן תקין');
+  const sp = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  sp.on('pageerror', e => errors.push(e.message));
+  await sp.route('https://script.google.com/**', r => r.fulfill({ status: 200, body: 'ok' }));
+  await sp.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await sp.addInitScript(() => { window.TODAY_OVERRIDE = '2026-10-08'; });
+  await sp.goto(URL); await sp.evaluate(() => localStorage.clear()); await sp.goto(URL, { waitUntil: 'load' });
+  check(await sp.locator('#seasonBtn').count() === 0, 'סט עונתי: מחוץ לתאריכים הוא לא מופיע');
+  await sp.close();
+  const sp2 = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  sp2.on('pageerror', e => errors.push(e.message));
+  await sp2.route('https://script.google.com/**', r => r.fulfill({ status: 200, body: 'ok' }));
+  await sp2.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await sp2.addInitScript(() => { window.TODAY_OVERRIDE = '2026-12-06'; });
+  await sp2.goto(URL); await sp2.evaluate(() => localStorage.clear()); await sp2.goto(URL, { waitUntil: 'load' });
+  check((await sp2.textContent('#seasonBtn')).includes('סט חנוכה') && (await sp2.evaluate(() => document.documentElement.scrollWidth)) <= 390, 'סט עונתי: בחנוכה מופיע בתפריט ונכנס למסך');
+  await sp2.click('#seasonBtn');
+  const n = D.SEASONS[0].items.length;
+  check((await sp2.textContent('#f_tot')) === String(n), 'סט עונתי: מספר המשפטים נכון');
+  for (let i = 0; i < n; i++) { await sp2.click('#f_choices .tfbtn >> nth=0'); await sp2.click('#f_next'); }
+  check((await sp2.textContent('#d_badge')).includes(D.SEASONS[0].badge.name) && await sp2.evaluate(() => gamesDone() === 0 && S.season.hanukkah2026 >= 0), 'סט עונתי: תג וסוד בסוף, והגלגל לא משתנה');
+  await sp2.close();
 
   console.log('כללי');
   check(errors.length === 0, 'אין שגיאות JavaScript' + (errors.length ? ': ' + errors.join(' | ') : ''));
