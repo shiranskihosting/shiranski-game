@@ -117,6 +117,23 @@ require('./server')(check);
   await back(); check(await visible() === 'lobby' && await page.isHidden('#exitDlg'), 'אחורה מקטגוריה: חוזרים לתפריט הראשי');
   await back(); check(await visible() === 'lobby' && await page.isVisible('#exitDlg'), 'אחורה בתפריט הראשי: נפתח חלון "לצאת מהמשחק?"');
   await page.click('#exitStay'); check(await page.isHidden('#exitDlg') && await visible() === 'lobby', '"להישאר" סוגר את החלון ונשארים במשחק');
+  await back(); await back(); check(page.url() !== URL && !page.url().startsWith(URL + '?'), 'אחורה פעמיים בתפריט הראשי: יוצאים מהמשחק');
+  await page.goto(URL, { waitUntil: 'load' });
+  // Chrome on Android ignores history entries added without a tap: nothing may be added on load
+  const bp = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  await bp.goto(URL, { waitUntil: 'load' });
+  const len0 = await bp.evaluate(() => history.length);
+  await bp.waitForTimeout(300);
+  check(await bp.evaluate(n => history.length === n && history.state && history.state.d === 0, len0) && len0 <= 2, 'אחורה: בטעינה לא נוספות רשומות היסטוריה (רק אחרי נגיעה)');
+  await bp.click('[data-c="photo"]');
+  check(await bp.evaluate(() => history.state.d) === 4, 'אחורה: נגיעה ראשונה מוסיפה מלאי של 4 לחיצות אחורה');
+  await bp.click('#category [data-back]');
+  await bp.evaluate(() => history.back()); await bp.waitForTimeout(250);
+  await bp.evaluate(() => { history.go = () => {}; });   // like a tab opened from WhatsApp: nowhere to go back to
+  await bp.click('#exitGo'); await bp.waitForTimeout(900);
+  check(await bp.isVisible('#byeDlg'), '"לצאת" כשאין לאן לחזור (נפתח מוואטסאפ): מופיע "תודה ששיחקתם"');
+  await bp.click('#byeBack'); check(await bp.isHidden('#byeDlg'), '"לחזור למשחק" סוגר את חלון הפרידה');
+  await bp.close();
 
   console.log('גלגל המזל המדורג');
   check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לשרת');

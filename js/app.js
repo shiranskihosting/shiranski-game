@@ -706,6 +706,12 @@ renderMute();
 // On the main menu the first back opens "לצאת מהמשחק?"; a second back (or "לצאת") leaves.
 let exitArmed = false;
 const GAME_SCREENS = ["bridge","trivia","memory","puzzle","zoom","tf","jigsaw"];
+// Chrome on Android skips history entries a page adds without a tap, so the "buffer" entries are only added
+// inside a tap (capture click below). A few are kept in stock, so several backs in a row still stay in the game.
+const BUFFER = 4;
+const depth = ()=>{ const st = history.state; return st && st.shiranski ? (st.d||0) : 0; };
+function topUp(){ try{ for(let d = depth(); d < BUFFER; d++) history.pushState({shiranski:1, d:d+1}, ""); }catch(e){} }
+document.addEventListener("click", e=>{ if(!e.target.closest("#exitGo")) topUp(); }, true);
 function visibleScreen(){ const el = document.querySelector(".screen:not([hidden])"); return el ? el.id : "lobby"; }
 function showExit(on){ exitArmed = on; $("exitDlg").hidden = !on; }
 function backOneScreen(){
@@ -714,18 +720,25 @@ function backOneScreen(){
   else if(GAME_SCREENS.includes(cur) || cur==="done") backFromGame();
   else { renderLobby(); show("lobby"); }   // wheel, result
 }
-function guard(){ try{ history.pushState({shiranski:1}, ""); }catch(e){} }
+// really leave: back past the game's own entries; a tab opened from WhatsApp has nowhere to go back to, so then say goodbye
+function leaveGame(){
+  showExit(false);
+  const before = location.href;
+  try{ history.go(-(depth()+1)); }catch(e){}
+  setTimeout(()=>{ if(location.href===before && document.visibilityState==="visible"){ try{ window.close(); }catch(e){} $("byeDlg").hidden = false; } }, 600);
+}
 window.addEventListener("popstate", ()=>{
-  if(!$("cardDlg").hidden){ $("cardDlg").hidden = true; guard(); return; }
-  if(exitArmed){ exitArmed = false; history.back(); return; }   // second back on the main menu: really leave
-  if(spinning){ guard(); return; }                               // never interrupt a spin
-  if(visibleScreen()!=="lobby"){ backOneScreen(); guard(); return; }
-  showExit(true); guard();
+  if(!$("byeDlg").hidden) return;
+  if(!$("cardDlg").hidden){ $("cardDlg").hidden = true; return; }
+  if(exitArmed){ leaveGame(); return; }                    // second back on the main menu
+  if(spinning) return;                                      // never interrupt a spin
+  if(visibleScreen()!=="lobby"){ backOneScreen(); return; }
+  showExit(true);
 });
 $("exitStay").addEventListener("click", ()=>showExit(false));
-$("exitGo").addEventListener("click", ()=>{ $("exitDlg").hidden = true; history.back(); });
-try{ history.replaceState({shiranski:0}, ""); }catch(e){}
-guard();
+$("exitGo").addEventListener("click", leaveGame);
+$("byeBack").addEventListener("click", ()=>{ $("byeDlg").hidden = true; });
+try{ if(!(history.state && history.state.shiranski)) history.replaceState({shiranski:1, d:0}, ""); }catch(e){}
 
 /* boot */
 renderLobby(); show("lobby");
