@@ -184,7 +184,7 @@ const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מב
 const TRACK_URL = "https://script.google.com/macros/s/AKfycbxZaBY3FybRY9mY_kaxy8Q1oxQfdGFDB0w9nBKBqz78L5BeGzRYkXniZeb9wiGFZ6arTw/exec";
 const SPIN_URL = TRACK_URL;
 
-// --- תג וסוד מהמטבח: מקבלים בסיום כל המשחקים של קטגוריה (טיוטה, לעריכה של שירן)
+// --- תג וסוד מהמטבח: מקבלים בסיום כל המשחקים של קטגוריה (אושר ע"י שירן 8.10.2026)
 const BADGES = {
   trivia:{name:"אורח הבית",       secret:"מלח גס על עגבניות פרוסות עשר דקות לפני ההגשה מוציא מהן את המיץ והמתיקות. ככה מתחיל סלט טוב."},
   flavor:{name:"חך מכויל",        secret:"כשמנה מרגישה שטוחה, היא כמעט תמיד צריכה חומצה ולא עוד מלח. כמה טיפות לימון או חומץ, טועמים, ורק אז מחליטים."},
