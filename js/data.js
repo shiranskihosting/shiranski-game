@@ -180,4 +180,4 @@ const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מב
 // The prize is drawn by Make (not in the browser) and every code is logged in Shiran's private sheet.
 const SPIN_URL = "https://hook.eu1.make.com/i1bwo3cdw4nvplh1rn8atd1nfw4pb85g";
 // Anonymous play statistics (Apps Script web app on the sheet "נתוני משחק – שירנסקי מארח"). Empty = off.
-const TRACK_URL = "";
+const TRACK_URL = "https://script.google.com/macros/s/AKfycbxZaBY3FybRY9mY_kaxy8Q1oxQfdGFDB0w9nBKBqz78L5BeGzRYkXniZeb9wiGFZ6arTw/exec";
