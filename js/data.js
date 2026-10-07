@@ -201,7 +201,7 @@ const PRIZES = {
 };
 // order around the wheel, spread so equal prizes don't touch. Must match the server.
 const WHEEL = ["K","M","R","K","T","M","K","V","R","M","K","Z","R","K","M","T","R","K","V","M"];
-const MAX_SPINS = 5;
+const MAX_SPINS = 3;
 const TALLY_URL = "https://tally.so/r/EkRN1A";
 const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מבצעים או הזמנות. בתוקף 3 חודשים, בכפוף לאישור "+BRAND+".";
 // Game server: Apps Script web app on the sheet "נתוני משחק – שירנסקי מארח" (code: tools/stats-apps-script.gs).

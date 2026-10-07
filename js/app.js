@@ -534,7 +534,7 @@ async function spin(){
   SFX.whoosh(); tickWhileSpinning(w, 5300);
   const before = S.prize ? S.prize.k : null;
   setTimeout(()=>{
-    S.spins = MAX_SPINS - res.spinsLeft;
+    S.spins = Math.min(MAX_SPINS, Math.max((S.spins||0)+1, MAX_SPINS - res.spinsLeft));
     if(res.best) S.prize = {k:res.best, code:res.code, slot:res.best===res.k ? res.slot : (S.prize && S.prize.slot), at:new Date().toISOString().slice(0,10)};
     save();
     TRACK.ev("סיבוב", "רמה "+lv, res.win ? PRIZES[res.k].label : "ריק"); TRACK.flush();

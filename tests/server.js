@@ -58,21 +58,20 @@ module.exports = function serverChecks(check) {
   check(!r.ok && r.err === 'details', 'שרת: בלי שם וטלפון אין סיבוב');
 
   at(slotOf('M')); r = go(1);
-  check(r.ok && !r.win && r.spinsLeft === 4 && !r.code && tabs['Untitled'].data.length === 1, 'שרת: ברמה 1 משבצת 10% ריקה, בלי קוד, נשארו 4');
+  check(r.ok && !r.win && r.spinsLeft === 2 && !r.code && tabs['Untitled'].data.length === 1, 'שרת: ברמה 1 משבצת 10% ריקה, בלי קוד, נשארו 2');
   at(slotOf('K')); r = go(2);
   check(r.ok && r.win && r.k === 'K' && /^SH-[0-9A-F]{6}$/.test(r.code) && tabs['Untitled'].data.length === 2, 'שרת: זכייה ראשונה יוצרת קוד ושורה בגיליון');
   check(tabs['Untitled'].data[1][8] === 'לא' && tabs['Untitled'].data[1][9] === 'qr', 'שרת: בלי סימון אין הסכמה לדיוור; המקור נשמר');
   const code = r.code;
   at(slotOf('R')); r = go(6, '050-1234567', true);
-  check(r.ok && r.win && r.best === 'R' && r.upgraded && r.code === code && tabs['Untitled'].data[1][5] === '15% הנחה', 'שרת: פרס גבוה יותר משדרג את אותו קוד');
+  check(r.ok && r.win && r.best === 'R' && r.upgraded && r.code === code && r.spinsLeft === 0 && tabs['Untitled'].data[1][5] === '15% הנחה', 'שרת: פרס גבוה יותר משדרג את אותו קוד (הסיבוב השלישי)');
   check(tabs['Untitled'].data[1][8].startsWith('כן') && tabs['סיבובים'].data[3][10] === 'כן', 'שרת: הסכמה שניתנה בסיבוב מאוחר נרשמת בשורת הפרס וביומן');
-  at(slotOf('K')); r = go(9, '972501234567');
-  check(r.ok && r.win && r.best === 'R' && !r.upgraded && tabs['Untitled'].data[1][5] === '15% הנחה', 'שרת: פרס נמוך יותר לא מוריד את הפרס (גם עם 972)');
   at(slotOf('Z')); r = go(9);
-  check(r.ok && r.best === 'Z' && r.spinsLeft === 0, 'שרת: הסיבוב החמישי, הגלגל המלא');
-  r = go(9);
-  check(!r.ok && r.err === 'nospins' && r.best === 'Z', 'שרת: אחרי 5 סיבובים אין עוד');
-  check(tabs['סיבובים'].data.length === 6 && tabs['Untitled'].data.length === 2, 'שרת: כל סיבוב ביומן, קוד אחד לשחקן');
+  check(!r.ok && r.err === 'nospins' && r.best === 'R', 'שרת: אחרי 3 סיבובים אין עוד');
+  check(tabs['סיבובים'].data.length === 4 && tabs['Untitled'].data.length === 2, 'שרת: כל סיבוב ביומן, קוד אחד לשחקן');
+  at(slotOf('Z')); r = go(9, '0529999999');
+  at(slotOf('K')); r = go(9, '972529999999');
+  check(r.ok && r.win && r.best === 'Z' && !r.upgraded && tabs['Untitled'].data[2][5] === '2 זוגות במחיר של 1', 'שרת: פרס נמוך יותר לא מוריד את הפרס (גם עם 972)');
 
   tabs = reset();
   tabs['Untitled'].data.push(['06/10/2026', '08:27', 'לקוחה', '0546306131', 'SH-F98DAC', '5% הנחה', 'מומש', '']);

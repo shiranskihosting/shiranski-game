@@ -23,7 +23,7 @@ const WHEEL = 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M'.split(',');
 const LABEL = {K: '5% הנחה', M: '10% הנחה', R: '15% הנחה', T: '20% הנחה', V: '3 סועדים במחיר של 2', Z: '2 זוגות במחיר של 1'};
 const RANK = {K: 1, M: 2, R: 3, T: 4, V: 5, Z: 6};        // מה נחשב פרס גבוה יותר
 const OPENS_AT = {K: 1, M: 2, R: 3, T: 4, V: 4, Z: 4};    // באיזו רמה המשבצת נפתחת
-const MAX_SPINS = 5;
+const MAX_SPINS = 3;
 const TOTAL_GAMES = 9;
 
 /* ---------- כללי הגלגל (פונקציות טהורות, נבדקות אוטומטית) ---------- */
