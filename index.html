@@ -28,15 +28,16 @@
     <header class="brand">
       <div class="toprow"><span class="eyebrow">ערב בשירנסקי מארח</span><button class="mute" id="muteBtn" type="button"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><svg class="offi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button></div>
       <h1>המטבח של שירנסקי מארח</h1>
-      <p class="lede">ארבעה עולמות של משחקים קצרים: טריוויה, טעמים, תמונות וזוגות. אוספים כוכבים, ובסוף מקבלים תואר.</p>
+      <p class="lede">9 משחקים קצרים על מנות אמיתיות מהתפריטים. כל משחק שמסיימים משפר את גלגל המזל.</p>
     </header>
     <a class="promo" id="promo" href="#" aria-label="פרטים על גלגל המזל">
       <svg class="promo-ico" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="26" r="17"/><path d="M24 9v34M7 26h34M12 14l24 24M36 14L12 38" opacity=".45"/><circle cx="24" cy="26" r="3.5" fill="currentColor"/><path d="M20 4h8l-4 6z" fill="currentColor"/></svg>
       <span class="promo-txt"><b>שחקו כדי לקבל ממני מתנה!</b><span id="promo_line">מסיימים את כל המשחקים ומסובבים את גלגל המזל.</span><span class="promo-bar"><i id="promo_bar"></i></span></span>
     </a>
+    <button class="btn gold start" id="startBtn" type="button">להתחיל לשחק</button>
     <div class="tiles" id="gamelist"></div>
     <div class="finish">
-      <button class="btn gold" id="finishBtn">לתוצאה ולשיתוף</button>
+      <button class="btn ghost" id="finishBtn">לתוצאה ולשיתוף</button>
       <a class="btn ghost" id="bookBtn" href="#" target="_blank" rel="noopener">להזמנת מקום בשירנסקי מארח</a>
       <p class="note">אפשר לשחק בכל סדר. כוכבים נשמרים בטלפון הזה.</p>
       <p class="terms" id="lobby_terms"></p>
@@ -152,6 +153,19 @@
       <div class="jigwrap"><div class="jghost" id="j_ghost"></div><div class="jboard" id="j_board"></div></div>
       <p class="note">חלק שבמקום הנכון מקבל מסגרת זהב. כוכב למי שמסיים ב-12 החלפות או פחות.</p>
       <div id="j_reveal" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- END OF A GAME -->
+  <section class="screen" id="done" hidden>
+    <div class="stage donestage">
+      <span class="eyebrow" id="d_game"></span>
+      <h2 class="prompt" id="d_title"></h2>
+      <div class="dstars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7z"/></svg><span id="d_stars">0</span><span class="dmax">/ <span id="d_max">0</span></span></div>
+      <p class="note" id="d_note"></p>
+      <div class="reveal" id="d_wheel" hidden></div>
+      <div class="reveal badge" id="d_badge" hidden></div>
+      <div class="dactions" id="d_actions"></div>
     </div>
   </section>
 

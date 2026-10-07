@@ -183,3 +183,13 @@ const PRIZE_TERMS = "המתנה לאירוע אחד בלבד! אין כפל מב
 // It records anonymous statistics and draws the wheel prize; codes go to Shiran's private sheet "קודי פרסים – שירנסקי מארח".
 const TRACK_URL = "https://script.google.com/macros/s/AKfycbxZaBY3FybRY9mY_kaxy8Q1oxQfdGFDB0w9nBKBqz78L5BeGzRYkXniZeb9wiGFZ6arTw/exec";
 const SPIN_URL = TRACK_URL;
+
+// --- תג וסוד מהמטבח: מקבלים בסיום כל המשחקים של קטגוריה (טיוטה, לעריכה של שירן)
+const BADGES = {
+  trivia:{name:"אורח הבית",       secret:"מלח גס על עגבניות פרוסות עשר דקות לפני ההגשה מוציא מהן את המיץ והמתיקות. ככה מתחיל סלט טוב."},
+  flavor:{name:"חך מכויל",        secret:"כשמנה מרגישה שטוחה, היא כמעט תמיד צריכה חומצה ולא עוד מלח. כמה טיפות לימון או חומץ, טועמים, ורק אז מחליטים."},
+  photo: {name:"עין של שף",       secret:"צלחת יפה מתחילה בשוליים נקיים. מניחים מספר אי-זוגי של רכיבים, שלושה או חמישה, והעין נחה עליה."},
+  pairs: {name:"זיכרון של מלצר",  secret:"מוציאים בשר מהמקרר חצי שעה לפני הצלייה, ונותנים לו לנוח אחריה בערך חצי מזמן הצלייה. ככה המיצים נשארים בפנים."},
+};
+// the order "למשחק הבא" suggests: short and easy first, the big ones last
+const GAME_ORDER = ["tf","zoom","puzzle","memory","odd","jigsaw","trivia","bridge","memory2"];

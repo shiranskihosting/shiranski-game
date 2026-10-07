@@ -9,7 +9,7 @@ const check = (ok, msg) => { if (!ok) fails.push(msg); console.log((ok ? '  ✓ 
 // ---------- 1. Content checks (no browser) ----------
 console.log('תוכן');
 const ctx = { console }; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL,TRACK_URL};', ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data.js'), 'utf8') + ';this.D={BRAND,PHOTOS,BRIDGE,TRIVIA,TF,DISHES_MEM,DISHES_MEM_BIG,PRIZES,WHEEL,TALLY_URL,SPIN_URL,TRACK_URL,BADGES,GAME_ORDER};', ctx);
 const D = ctx.D;
 check(D.BRIDGE.length >= 20, `הגשר: לפחות 20 מנות (${D.BRIDGE.length})`);
 check(D.BRIDGE.every(r => r.opts.includes(r.ok) && new Set(r.opts).size === 4), 'הגשר: בכל מנה 4 אפשרויות שונות והתשובה ביניהן');
@@ -56,6 +56,13 @@ require('./server')(check);
   check(await page.locator('.tile').count() === 4, 'תפריט ראשי: 4 קטגוריות');
   check(await width() <= 390, 'תפריט ראשי: אין גלילה הצידה');
   check((await page.getAttribute('#bookBtn', 'href')) === D.TALLY_URL, 'כפתור הזמנת מקום מוביל לטופס Tally');
+  check((await page.textContent('#startBtn')).includes('נכון או לא נכון'), 'תפריט ראשי: כפתור "להתחיל לשחק" מציע משחק קצר');
+  await page.click('#startBtn');
+  check(await visible() === 'tf', 'כפתור "להתחיל לשחק" פותח את המשחק');
+  for (let i = 0; i < 10; i++) { await page.click('#f_choices .tfbtn >> nth=0'); await page.click('#f_next'); }
+  check(await visible() === 'done' && (await page.textContent('#d_wheel')).includes('גלגל המזל נפתח'), 'מסך סיום: אחרי המשחק הראשון כתוב שהגלגל נפתח');
+  check((await page.textContent('#d_next')).includes(D.GAME_ORDER ? 'מה בצלחת?' : ''), 'מסך סיום: כפתור "למשחק הבא" עם המשחק הבא בתור');
+  await page.evaluate(() => { localStorage.clear(); S = FRESH(); save(); renderLobby(); show('lobby'); });
   for (const c of ['trivia', 'flavor', 'photo', 'pairs']) {
     await page.click(`[data-c="${c}"]`);
     check(await visible() === 'category' && await width() <= 390, `קטגוריה ${c}: נפתחת ונכנסת למסך`);
@@ -67,11 +74,16 @@ require('./server')(check);
     await loop();
     const done = await page.evaluate(g => JSON.parse(localStorage.getItem('shiranski-game-v1')).done[g] === true, game);
     check(done, `${game}: אפשר לשחק עד הסוף והתוצאה נשמרת`);
-    check(await visible() === 'category', `${game}: בסוף חוזרים לקטגוריה`);
+    check(await visible() === 'done' && (await page.textContent('#d_game')) === await page.evaluate(g => GAMES.find(x => x.id === g).name, game), `${game}: בסוף מסך סיום עם שם המשחק`);
+    await page.click('#d_back');
+    check(await visible() === 'category', `${game}: מהמסך סיום חוזרים לקטגוריה`);
     await page.click('#category [data-back]');
   };
   await play('trivia', 'trivia', async () => { for (let i = 0; i < 20; i++) { await page.click('#t_choices .choice >> nth=0'); await page.click('#t_next'); } });
-  await play('trivia', 'tf', async () => { for (let i = 0; i < 10; i++) { await page.click('#f_choices .tfbtn >> nth=1'); await page.click('#f_next'); } });
+  await play('trivia', 'tf', async () => {
+    for (let i = 0; i < 10; i++) { await page.click('#f_choices .tfbtn >> nth=1'); await page.click('#f_next'); }
+    check(await page.isVisible('#d_badge') && (await page.textContent('#d_badge')).includes(D.BADGES.trivia.name) && (await page.textContent('#d_badge')).includes('סוד מהמטבח'), 'סיום קטגוריה: תג וסוד מהמטבח');
+  });
   await play('flavor', 'bridge', async () => { for (let i = 0; i < 20; i++) { await page.click('#b_choices .choice >> nth=0'); await page.click('#b_next'); } });
   await play('flavor', 'odd', async () => { for (let i = 0; i < 10; i++) { await page.click('#o_choices .oddbtn >> nth=0'); await page.click('#o_next'); } });
   await play('photo', 'puzzle', async () => {
@@ -93,7 +105,7 @@ require('./server')(check);
     const keys = await page.$$eval('#m_grid .mem', els => els.map(e => e.dataset.k));
     const by = {}; keys.forEach((k, i) => (by[k] = by[k] || []).push(i));
     for (const k in by) { await page.click(`#m_grid .mem >> nth=${by[k][0]}`); await page.click(`#m_grid .mem >> nth=${by[k][1]}`); await page.waitForTimeout(420); }
-    await page.click('#m_done');
+    await page.waitForSelector('#done:not([hidden])');
     return n;
   };
   await play('pairs', 'memory', async () => check(await pairs() === 12, 'זוגות מהתפריט: 12 קלפים'));
