@@ -70,7 +70,15 @@ function renderPromo(){
     : `גלגל המזל פתוח · רמה ${lv} מתוך 4 · סיכוי זכייה ${pc(chance(lv))} · נותרו ${spinsWord(spinsLeft())}${prize}`;
 }
 $("promo").addEventListener("click",e=>{ e.preventDefault(); if(level()>=1 || S.prize){ openWheel(); } else { toast("מסיימים משחק אחד ופותחים את גלגל המזל"); } });
-$("bookBtn").href = TALLY_URL; $("lobby_terms").textContent = "פרסי גלגל המזל: "+PRIZE_TERMS;
+// booking form link: Tally fills name, phone and prize code from the URL (hidden fields name/phone/code)
+function bookingUrl(){
+  const p = [];
+  if(S.who && S.who.name) p.push("name="+encodeURIComponent(S.who.name));
+  if(S.who && S.who.phone){ const d = String(S.who.phone).replace(/\D/g,"").replace(/^972/,"0"); if(d.length>=9) p.push("phone="+encodeURIComponent("+972"+d.replace(/^0/,""))); }
+  if(S.prize && S.prize.code) p.push("code="+encodeURIComponent(S.prize.code));
+  return TALLY_URL + (p.length ? "?"+p.join("&") : "");
+}
+$("bookBtn").href = bookingUrl(); $("lobby_terms").textContent = "פרסי גלגל המזל: "+PRIZE_TERMS;
 function renderStart(){
   const nx = nextGame(), btn = $("startBtn");
   if(nx){ btn.hidden = false; btn.textContent = gamesDone()===0 ? `להתחיל לשחק: ${nx.name} · ${nx.time}` : `למשחק הבא: ${nx.name} · ${nx.time}`; btn.onclick = ()=>{ curCat = nx.cat; start(nx.id); }; }
@@ -562,13 +570,12 @@ async function spin(){
 }
 function showPrize(note){
   const P = PRIZES[S.prize.k], left = spinsLeft(), lv = level();
-  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span>${note?`<p>${note}</p>`:""}<p>כדי לממש: בטופס הזמנת המקום, כתבו את הקוד בשדה ההערות. קוד אחד לשחקן: אם תזכו בפרס גבוה יותר, הקוד נשאר והפרס משתדרג.</p></div>
+  $("w_reveal").innerHTML = `<div class="reveal prize"><span class="eyebrow">הפרס שלך</span><b class="prize-name">${P.label}</b><span class="prize-code">${S.prize.code}</span>${note?`<p>${note}</p>`:""}<p>כדי לממש: לוחצים על "להזמנת מקום עם הפרס", והשם, הטלפון והקוד כבר ממולאים בטופס. קוד אחד לשחקן: אם תזכו בפרס גבוה יותר, הקוד נשאר והפרס משתדרג.</p></div>
     <button class="btn gold" id="w_card">לשמור את כרטיס הפרס כתמונה</button>
-    <button class="btn ghost" id="w_copy">להעתיק את הקוד</button>
     ${left>0 && lv<4 ? `<button class="btn primary" id="w_play">להמשיך לשחק ולשדרג את הגלגל</button>` : ""}
-    <a class="btn primary" href="${TALLY_URL}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
+    <a class="btn primary" id="w_book" href="${bookingUrl()}" target="_blank" rel="noopener">להזמנת מקום עם הפרס</a>`;
+  $("bookBtn").href = bookingUrl();
   $("w_card").addEventListener("click", savePrizeCard);
-  $("w_copy").addEventListener("click",()=>{ navigator.clipboard.writeText(S.prize.code).then(()=>toast("הקוד הועתק")).catch(()=>toast("לא הצלחנו להעתיק")); });
   if($("w_play")) $("w_play").addEventListener("click",()=>{ renderLobby(); show("lobby"); });
 }
 
@@ -678,7 +685,7 @@ function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("
 document.addEventListener("click", e=>{
   const a = e.target.closest("a, button"); if(!a) return;
   const href = a.getAttribute("href") || "";
-  if(href.indexOf(TALLY_URL)===0) { TRACK.ev("הזמנה", "", a.closest("#wheel") ? "טופס מהגלגל" : "טופס"); TRACK.flush(); }
+  if(href.indexOf(TALLY_URL)===0) { a.href = bookingUrl(); TRACK.ev("הזמנה", "", a.closest("#wheel") ? "טופס מהגלגל" : "טופס"); TRACK.flush(); }
   else if(href.indexOf("https://wa.me/972")===0) { TRACK.ev("הזמנה", "", "וואטסאפ"); TRACK.flush(); }
   else if(a.id==="shareBtn") { TRACK.ev("שיתוף", "", "וואטסאפ"); TRACK.flush(); }
   else if(a.id==="copyBtn") TRACK.ev("שיתוף", "", "העתקה");
