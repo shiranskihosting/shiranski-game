@@ -165,7 +165,7 @@ const DISHES_MEM_BIG = DISHES_MEM.concat(["חציל שחור וטחינה","סל
 
 // --- גלגל המזל המדורג. 20 משבצות שוות; כל פרס מופיע כמספר המשבצות שלו.
 // opens = באיזו רמה המשבצת נפתחת. משבצת שעוד לא נפתחה ריקה ("לא הפעם").
-// רמות: 1–2 משחקים = 1 · 3–5 = 2 · 6–8 = 3 · כל 9 = 4 (הגלגל המלא). ההגרלה עצמה בשרת (tools/stats-apps-script.gs).
+// רמות: 1–2 משחקים = 1 · 3–4 = 2 · 5–6 = 3 · כל 7 = 4 (הגלגל המלא). ההגרלה עצמה בשרת (tools/stats-apps-script.gs).
 const PRIZES = {
   K:{label:"5% הנחה",               short:"5%",          slices:6, opens:1},
   M:{label:"10% הנחה",              short:"10%",         slices:5, opens:2},
@@ -192,7 +192,7 @@ const BADGES = {
   pairs: {name:"זיכרון של מלצר",  secret:"מוציאים בשר מהמקרר חצי שעה לפני הצלייה, ונותנים לו לנוח אחריה בערך חצי מזמן הצלייה. ככה המיצים נשארים בפנים."},
 };
 // the order "למשחק הבא" suggests: short and easy first, the big ones last
-const GAME_ORDER = ["tf","zoom","puzzle","memory","odd","jigsaw","trivia","bridge","memory2"];
+const GAME_ORDER = ["tf","zoom","puzzle","memory","jigsaw","trivia","bridge"];
 
 // --- סט עונתי לזמן מוגבל (נכון או לא נכון). מופיע בתפריט רק בין from ל-to. לא משנה את גלגל המזל (סט חנוכה 2026 אושר ע"י שירן 8.10.2026):
 // מקבלים עליו תג וסוד מהמטבח. תצוגה מקדימה בכל זמן: ?season=<id>

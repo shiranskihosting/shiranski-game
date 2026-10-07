@@ -1,10 +1,10 @@
 /* ===================== STATE ===================== */
 const KEY = "shiranski-game-v1";
-const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, odd:0, jigsaw:0, memory2:0, done:{}, prize:null, spins:0, who:null, season:{}});
+const FRESH = ()=>({bridge:0, trivia:0, memory:0, puzzle:0, zoom:0, tf:0, jigsaw:0, done:{}, prize:null, spins:0, who:null, season:{}});
 let S = FRESH();
 try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.done) S = Object.assign(FRESH(), s); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4, tf:10, odd:10, jigsaw:3, memory2:3};
+const MAX = {bridge:20, trivia:20, memory:3, puzzle:3, zoom:4, tf:10, jigsaw:3};
 
 const $ = (id)=>document.getElementById(id);
 const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -32,12 +32,10 @@ const GAMES = [
   {id:"trivia", cat:"trivia", name:"מכירים את "+BRAND+"?", desc:"20 שאלות על הבית, על הטעמים ועל אליס.", time:"4 דק׳", ico:CATS[0].ico},
   {id:"tf",     cat:"trivia", name:"נכון או לא נכון", desc:"10 משפטים, 10 שניות לכל אחד. מהר!", time:"2 דק׳", ico:'<path d="M5 12l4 4 10-10"/>'},
   {id:"bridge", cat:"flavor", name:"הגשר", desc:"20 מנות אמיתיות מהתפריטים. מה הרכיב השלישי?", time:"4 דק׳", ico:CATS[1].ico},
-  {id:"odd",    cat:"flavor", name:"מה לא שייך?", desc:"4 רכיבים, אחד מהם לא היה בצלחת.", time:"3 דק׳", ico:'<circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="7" cy="17" r="3"/><path d="M14 14l6 6M20 14l-6 6"/>'},
   {id:"puzzle", cat:"photo", name:"תמונה ושם", desc:"מתאימים כל תמונה לשם המנה שלה.", time:"2 דק׳", ico:CATS[2].ico},
   {id:"zoom",   cat:"photo", name:"מה בצלחת?", desc:"תקריב שהולך ונפתח. מזהים את המנה?", time:"1 דק׳", ico:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5M11 8v6M8 11h6"/>'},
   {id:"jigsaw", cat:"photo", name:"פאזל חלקים", desc:"מנה מפורקת ל-9 חלקים. מחזירים אותה לצלחת.", time:"3 דק׳", ico:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>'},
   {id:"memory", cat:"pairs", name:"זוגות מהתפריט", desc:"12 קלפים, 6 מנות. מוצאים כל מנה פעמיים.", time:"2 דק׳", ico:CATS[3].ico},
-  {id:"memory2", cat:"pairs", name:"זוגות מהתפריט: שולחן גדול", desc:"20 קלפים, 10 מנות. לאלופים.", time:"4 דק׳", ico:'<rect x="2" y="4" width="6" height="8" rx="1"/><rect x="9" y="4" width="6" height="8" rx="1"/><rect x="16" y="4" width="6" height="8" rx="1"/><rect x="5" y="13" width="6" height="8" rx="1"/><rect x="13" y="13" width="6" height="8" rx="1"/>'},
 ];
 let curCat = null;
 function totalStars(){ return Object.keys(MAX).reduce((a,k)=>a+(S[k]||0),0); }
@@ -47,13 +45,17 @@ function catMax(c){ return GAMES.filter(g=>g.cat===c).reduce((a,g)=>a+MAX[g.id],
 function gamesLeft(){ return GAMES.filter(g=>!S.done[g.id]).length; }
 // Graded wheel: the more games finished, the more prize slots are open (both the chance and the prizes grow).
 function gamesDone(){ return GAMES.length - gamesLeft(); }
-function levelFor(n){ return n>=GAMES.length ? 4 : n>=6 ? 3 : n>=3 ? 2 : n>=1 ? 1 : 0; }
+// levels open after 1, 3 and 5 games; the full wheel after all of them (7)
+const LEVEL_AT = ()=>[1, 3, 5, GAMES.length];
+function levelFor(n){ return LEVEL_AT().filter(x=>n>=x).length; }
+// the server counts on a 9-game scale (1 / 3 / 6 / 9); send the same level in that scale so it needs no update
+const SERVER_GAMES = [0, 1, 3, 6, 9];
 function level(){ return levelFor(gamesDone()); }
 function slotOpen(i, lv){ return PRIZES[WHEEL[i]].opens <= lv; }
 function chance(lv){ return Math.round(WHEEL.filter((k,i)=>slotOpen(i,lv)).length / WHEEL.length * 100); }
 const pc = n => "\u2066"+n+"%\u2069"; // keeps "30%" the right way round inside Hebrew text
 function spinsLeft(){ return Math.max(0, MAX_SPINS - (S.spins||0)); }
-function gamesToNext(){ const n = gamesDone(); return n>=GAMES.length ? 0 : n>=6 ? GAMES.length-n : n>=3 ? 6-n : n>=1 ? 3-n : 1-n; }
+function gamesToNext(){ const n = gamesDone(), nx = LEVEL_AT().find(x=>n<x); return nx ? nx-n : 0; }
 function wheelOpen(){ return level()>=1 && spinsLeft()>0 && !S.redeemed; }
 function spinsWord(n){ return n===1 ? "סיבוב אחד" : n+" סיבובים"; }
 function renderPromo(){
@@ -194,9 +196,7 @@ function start(id){
   if(id==="puzzle") startPuzzle();
   if(id==="zoom")   startZoom();
   if(id==="tf")     startTF();
-  if(id==="odd")    startOdd();
   if(id==="jigsaw") startJigsaw();
-  if(id==="memory2") startMemory(true);
 }
 function glow(el, silent){ if(!silent) SFX.good(); el.classList.remove("glow"); void el.offsetWidth; el.classList.add("glow"); if(navigator.vibrate) try{navigator.vibrate(30);}catch(e){} }
 function setStars(prefix, n){ $(prefix+"_stars").textContent = n; }
@@ -384,32 +384,6 @@ function answerTF(btn){
   $("f_next").addEventListener("click",()=>{ if(last){ if(f.season){ finishSeason(f.season, f.score); } else { S.tf=Math.max(S.tf,f.score); S.done.tf=true; save(); finishGame("tf", f.score); } } else { f.i++; renderTF(); } });
 }
 
-/* ===================== ODD ONE OUT ===================== */
-const ODD_N = 10;
-let o = {i:0, score:0, set:[]};
-function startOdd(){
-  o = {i:0, score:0, set:shuffle(BRIDGE).slice(0,ODD_N)};
-  show("odd"); renderOdd();
-}
-function renderOdd(){
-  const r = o.set[o.i];
-  const intruder = shuffle(r.opts.filter(x=>x!==r.ok))[0];
-  o.cur = {r, intruder};
-  $("o_n").textContent = o.i+1; $("o_prog").style.width=(o.i/ODD_N*100)+"%"; setStars("o", o.score);
-  $("o_q").textContent = "מנה מהתפריט: "+r.dish+". מה לא היה בצלחת?";
-  $("o_reveal").innerHTML="";
-  $("o_choices").innerHTML = shuffle([r.a, r.b, r.ok, intruder]).map(x=>`<button class="choice oddbtn">${x}</button>`).join("");
-  $("o_choices").querySelectorAll(".oddbtn").forEach(btn=>btn.addEventListener("click",()=>{
-    const good = btn.textContent===intruder;
-    $("o_choices").querySelectorAll(".oddbtn").forEach(x=>{ x.disabled=true; if(x.textContent===intruder) x.classList.add("bad"); else x.classList.add("ok"); });
-    if(good){ o.score++; glow(btn); } else SFX.bad();
-    setStars("o", o.score);
-    const last = o.i===ODD_N-1;
-    $("o_reveal").innerHTML = `<div class="reveal"><b>${good?"תפסת אותו.":"הזר היה: "+intruder+"."} בצלחת: ${r.a} · ${r.b} · ${r.ok}</b><p>${r.why}</p></div><button class="btn primary" id="o_next">${last?"לסיום המשחק":"למנה הבאה"}</button>`;
-    $("o_next").addEventListener("click",()=>{ if(last){ S.odd=Math.max(S.odd,o.score); S.done.odd=true; save(); finishGame("odd", o.score); } else { o.i++; renderOdd(); } });
-  }));
-}
-
 /* ===================== JIGSAW (3x3 swap) ===================== */
 const JIG_ROUNDS = 3, JIG_PAR = 12;
 let j = {round:0, stars:0, photos:[], order:[], sel:null, swaps:0};
@@ -539,7 +513,7 @@ async function spin(){
   let res = null;
   try{
     const ctrl = new AbortController(); const tm = setTimeout(()=>ctrl.abort(), 25000);
-    const r = await fetch(SPIN_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({a:"spin", name, phone, games:gamesDone(), consent, src:TRACK.src}), signal:ctrl.signal});
+    const r = await fetch(SPIN_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({a:"spin", name, phone, games:SERVER_GAMES[level()], played:gamesDone(), consent, src:TRACK.src}), signal:ctrl.signal});
     clearTimeout(tm); res = await r.json();
   }catch(e){ res = null; }
   w.classList.remove("waiting");

@@ -15,7 +15,7 @@ check(D.BRIDGE.length >= 20, `הגשר: לפחות 20 מנות (${D.BRIDGE.lengt
 check(D.BRIDGE.every(r => r.opts.includes(r.ok) && new Set(r.opts).size === 4), 'הגשר: בכל מנה 4 אפשרויות שונות והתשובה ביניהן');
 check(D.TRIVIA.length >= 20 && D.TRIVIA.every(r => r.opts.includes(r.ok)), 'טריוויה: 20 שאלות והתשובה הנכונה בין האפשרויות');
 check(D.TF.length >= 10 && D.TF.every(r => typeof r.t === 'boolean' && r.s && r.why), 'נכון או לא נכון: לפחות 10 משפטים תקינים');
-check(D.DISHES_MEM.length >= 6 && D.DISHES_MEM_BIG.length >= 10 && new Set(D.DISHES_MEM_BIG).size === D.DISHES_MEM_BIG.length, 'זוגות מהתפריט: מספיק מנות ובלי כפולות');
+check(D.DISHES_MEM.length >= 6 && new Set(D.DISHES_MEM).size === D.DISHES_MEM.length, 'זוגות מהתפריט: מספיק מנות ובלי כפולות');
 const missing = D.PHOTOS.filter(p => !fs.existsSync(path.join(ROOT, p.src)));
 check(missing.length === 0, `תמונות: כל ${D.PHOTOS.length} הקבצים קיימים` + (missing.length ? ' (חסר: ' + missing.map(p => p.src).join(', ') + ')' : ''));
 check(new Set(D.PHOTOS.map(p => p.name)).size === D.PHOTOS.length, 'תמונות: אין שני שמות זהים');
@@ -53,7 +53,7 @@ require('./server')(check);
 
   console.log('משחק');
   await fresh();
-  check(await page.locator('.tile').count() === 4, 'תפריט ראשי: 4 קטגוריות');
+  check(await page.locator('.tile').count() === 4, 'תפריט ראשי: 4 קטגוריות') ; check(await page.evaluate(() => GAMES.length) === 7, 'סך הכול 7 משחקים');
   check(await width() <= 390, 'תפריט ראשי: אין גלילה הצידה');
   check((await page.getAttribute('#bookBtn', 'href')) === D.TALLY_URL, 'כפתור הזמנת מקום מוביל לטופס Tally');
   check((await page.textContent('#startBtn')).includes('נכון או לא נכון'), 'תפריט ראשי: כפתור "להתחיל לשחק" מציע משחק קצר');
@@ -85,7 +85,6 @@ require('./server')(check);
     check(await page.isVisible('#d_badge') && (await page.textContent('#d_badge')).includes(D.BADGES.trivia.name) && (await page.textContent('#d_badge')).includes('סוד מהמטבח'), 'סיום קטגוריה: תג וסוד מהמטבח');
   });
   await play('flavor', 'bridge', async () => { for (let i = 0; i < 20; i++) { await page.click('#b_choices .choice >> nth=0'); await page.click('#b_next'); } });
-  await play('flavor', 'odd', async () => { for (let i = 0; i < 10; i++) { await page.click('#o_choices .oddbtn >> nth=0'); await page.click('#o_next'); } });
   await play('photo', 'puzzle', async () => {
     for (let r = 0; r < 3; r++) {
       const ids = await page.$$eval('#p_photos .ph', els => els.map(e => e.dataset.id));
@@ -109,7 +108,6 @@ require('./server')(check);
     return n;
   };
   await play('pairs', 'memory', async () => check(await pairs() === 12, 'זוגות מהתפריט: 12 קלפים'));
-  await play('pairs', 'memory2', async () => check(await pairs() === 20, 'שולחן גדול: 20 קלפים'));
 
   console.log('גלגל המזל המדורג');
   check(D.WHEEL.join(',') === 'K,M,R,K,T,M,K,V,R,M,K,Z,R,K,M,T,R,K,V,M', 'גלגל: סדר המשבצות זהה לשרת');
@@ -139,15 +137,17 @@ require('./server')(check);
   await page.check('#w_consent');
   check((await page.textContent('#w_head')).includes('לא הפעם') && await page.evaluate(() => S.spins) === 1 && (await page.textContent('#w_status')).includes('4 סיבובים'), 'גלגל: משבצת ריקה – "לא הפעם", נשארו 4');
   await page.click('#wheel [data-back]');
-  await setDone(9);
+  await setDone(7);
   await page.click('#promo');
-  check(await page.locator('#w_wheel .slot.closed').count() === 0 && (await page.textContent('#w_head')).includes('100%'), 'גלגל מלא אחרי 9 משחקים: כל המשבצות פתוחות, 100%');
+  check(await page.locator('#w_wheel .slot.closed').count() === 0 && (await page.textContent('#w_head')).includes('100%'), 'גלגל מלא אחרי כל 7 המשחקים: כל המשבצות פתוחות, 100%');
   check(await page.locator('#w_form').isHidden(), 'גלגל: השם והטלפון נשמרים לסיבוב הבא');
   nextSpin = { ok: true, slot: 11, win: true, k: 'Z', best: 'Z', code: 'SH-7E57A1', upgraded: false, spinsLeft: 3, level: 4 };
   await page.click('#w_spin'); await page.waitForTimeout(6000);
   const prize = await page.evaluate(() => S.prize);
   check(spinBodies.length === 2 && prize && prize.k === 'Z' && prize.code === 'SH-7E57A1', 'גלגל: ברמה 4 בלי אזהרה; הפרס והקוד מהשרת נשמרים');
   check(spinBodies[1].consent === true && await page.isHidden('#w_consentbox'), 'גלגל: הסכמה נשלחת, והתיבה לא מוצגת שוב');
+  check(spinBodies[1].games === 9 && spinBodies[1].played === 7, 'גלגל: אחרי 7 משחקים השרת מקבל את הרמה המלאה');
+  check(await page.evaluate(() => [0,1,2,3,4,5,6,7].map(levelFor).join()) === '0,1,1,2,2,3,3,4', 'גלגל: רמות לפי 7 משחקים (1–2, 3–4, 5–6, 7)');
   check((await page.textContent('#w_reveal')).includes('SH-7E57A1') && await width() <= 390, 'גלגל: הקוד מוצג ללקוח ונכנס למסך');
   const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#w_card')]);
   const dlPath = await dl.path(); const png = fs.readFileSync(dlPath);
