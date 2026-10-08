@@ -2,7 +2,7 @@
 
 משחק אינטראקטיבי ללקוחות שירנסקי מארח.
 
-קישור קבוע: https://shiranskihosting.github.io/shiranski-game/
+קישור קבוע: https://game.shiranski.com/ (הכתובת הישנה shiranskihosting.github.io/shiranski-game מפנה אליה אוטומטית)
 
 ## איך מתעדכן
 כל שינוי שנשמר ב-main עובר קודם בדיקה אוטומטית (`tests/run.js`, בערך 50 בדיקות בגודל טלפון).
