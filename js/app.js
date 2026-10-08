@@ -630,7 +630,7 @@ async function makePrizeCard(){
   // footer
   c.strokeStyle = "rgba(201,169,110,.3)"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(220, H-170); c.lineTo(W-220, H-170); c.stroke();
   text(BRAND+" · שף פרטי בחיפה · 054-4714766", H-125, "600 32px "+BODY, "#F4EEE3");
-  c.direction = "ltr"; text("shiranskihosting.github.io/shiranski-game", H-80, "400 26px "+BODY, "#A9AC86");
+  c.direction = "ltr"; text("game.shiranski.com", H-80, "400 26px "+BODY, "#A9AC86");
   return cv;
 }
 // Shows the card as an image to keep: long-press saves it to the gallery (Android and iPhone),
